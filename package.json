@@ -1,0 +1,14 @@
+{
+  "name": "thoughts-for-food",
+  "version": "1.0.0",
+  "description": "Web app for sharing food recipes",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ammar Faouri",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
