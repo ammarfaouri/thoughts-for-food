@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Recipe = require("./Models/recipe");
 
-var data = [
+let data = [
   {
     name: "Chicken Nuggets",
     author: "Ammar Faouri",
@@ -39,6 +39,7 @@ function seedDB() {
     if (err) {
       console.log(err);
     } else {
+      console.log("collection is cleared");
       for (let recipe of data) {
         Recipe.create(recipe, function (err) {
           if (err) {

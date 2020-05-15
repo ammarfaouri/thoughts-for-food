@@ -1,7 +1,7 @@
-var mongoose = require("mongoose");
-var Schema = mongoose.Schema;
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-var recipeSchema = new Schema({
+let recipeSchema = new Schema({
   name: String,
   author: String,
   description: String,
@@ -11,5 +11,5 @@ var recipeSchema = new Schema({
   method: [],
 });
 
-var Recipe = mongoose.model("Recipe", recipeSchema);
+let Recipe = mongoose.model("Recipe", recipeSchema);
 module.exports = Recipe;
