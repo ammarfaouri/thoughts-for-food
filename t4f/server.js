@@ -19,6 +19,7 @@ db.once("open", function () {
   console.log("Database is connected");
 });
 
+//populate db with seed files
 seedDB();
 
 app
@@ -35,10 +36,11 @@ app
   })
   .post(function (req, res) {
     //adds recipe to collection
-    Recipe.create(req.body.data, function (err, createdRecipe) {
+    Recipe.create(req.body, function (err, createdRecipe) {
       if (err) {
         console.log(err);
       } else {
+        // console.log(req.body);
         console.log("added recipe from POST request", createdRecipe);
       }
     });
