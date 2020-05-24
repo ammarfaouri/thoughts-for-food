@@ -5,13 +5,22 @@ thoughts for food is an experimental project that challenges the conventional wa
 
 
 
-## install
+## Install
 
 * install modules into the repository
 ```bash
 npm install
 ```
 
-## run
+## Run
 
-## run tests
+* Run local http server
+```bash
+node server.js
+```
+
+
+## TODO
+- docker scripts
+- tests
+- docker container mongodb
