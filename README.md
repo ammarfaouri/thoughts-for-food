@@ -4,6 +4,16 @@ thoughts for food is an experimental project that challenges the conventional wa
 ![alt text](images/Artboard1.jpg "Title")
 
 
+## prerequists
+
+### nodemon for auto refresh
+
+```bash
+  sudo npm install -g nodemon
+```
+### Docker
+installation instructions 
+[here](https://docs.docker.com/engine/install/ubuntu/)
 
 ## Install
 
@@ -11,6 +21,7 @@ thoughts for food is an experimental project that challenges the conventional wa
 ```bash
 npm install
 ```
+
 
 ## Run
 
