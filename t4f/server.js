@@ -40,8 +40,8 @@ app
       if (err) {
         console.log(err);
       } else {
-        // console.log(req.body);
         console.log("added recipe from POST request", createdRecipe);
+        res.status(201).send("Success");
       }
     });
   })
