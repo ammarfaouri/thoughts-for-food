@@ -7,6 +7,11 @@ thoughts for food is an experimental project that challenges the conventional wa
 
 ## install
 
+* install modules into the repository
+```bash
+npm install
+```
+
 ## run
 
 ## run tests
