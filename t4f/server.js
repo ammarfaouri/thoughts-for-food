@@ -12,7 +12,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 //Mongoose Setup
-mongoose.connect("mongodb://localhost:27017/myapp", { useNewUrlParser: true });
+mongoose.connect("mongodb://localhost:27017/myapp", {
+  useNewUrlParser: true,
+  useFindAndModify: false,
+});
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
@@ -24,8 +27,9 @@ seedDB();
 
 app
   .route("/recipes")
+
   .get(function (req, res) {
-    //responds with all the recipes in the DB
+    //retrieve all recipes
     Recipe.find({}, function (err, recipes) {
       if (err) {
         console.log(err);
@@ -44,9 +48,22 @@ app
         res.status(201).send("Success");
       }
     });
-  })
+  });
+
+app
+  .route("/recipes/:id")
+  //finds recipe by id and updates it
   .put(function (req, res) {
-    res.send("Update the book");
+    let id = req.params.id;
+    let recipe = req.body;
+    Recipe.findOneAndUpdate(id, recipe, function (err, updatedRecipe) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(`recipe with id ${id} updated`, updatedRecipe);
+      }
+    });
+    res.end("yes");
   });
 
 app.listen(port, () =>
