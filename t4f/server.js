@@ -52,8 +52,9 @@ app
 
 app
   .route("/recipes/:id")
-  //finds recipe by id and updates it
+
   .put(function (req, res) {
+    //finds recipe by id and updates it
     let id = req.params.id;
     let recipe = req.body;
     Recipe.findOneAndUpdate(id, recipe, function (err, updatedRecipe) {
@@ -64,6 +65,18 @@ app
       }
     });
     res.end("yes");
+  })
+  .delete(function (req, res) {
+    //deletes recipe with id from Database
+    let id = req.params.id;
+
+    Recipe.findOneAndDelete(id, function () {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(`Recipe with id ${id}`);
+      }
+    });
   });
 
 app.listen(port, () =>
