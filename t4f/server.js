@@ -52,7 +52,17 @@ app
 
 app
   .route("/recipes/:id")
+  .get(function (req, res) {
+    let id = req.params.id;
 
+    Recipe.findById(id, function (err, Recipe) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(Recipe);
+      }
+    });
+  })
   .put(function (req, res) {
     //finds recipe by id and updates it
     let id = req.params.id;
@@ -74,7 +84,7 @@ app
       if (err) {
         console.log(err);
       } else {
-        console.log(`Recipe with id ${id}`);
+        console.log(`Deleted Recipe with id ${id}`);
       }
     });
   });
