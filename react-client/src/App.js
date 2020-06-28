@@ -4,6 +4,7 @@ import NavBar from "./NavBar";
 import About from "./About";
 import Contact from "./Contact";
 import Recipes from "./Recipes";
+import SingleRecipe from "./SingleRecipe";
 
 import Home from "./Home";
 import "./App.css";
@@ -16,6 +17,11 @@ class App extends Component {
         <Switch>
           <Route exact path="/About" render={() => <About />} />
           <Route exact path="/Contact" render={() => <Contact />} />
+          <Route
+            exact
+            path="/Recipes/:id"
+            render={(routeParams) => <SingleRecipe {...routeParams} />}
+          />
           <Route exact path="/Recipes" render={() => <Recipes />} />
 
           <Route exact path="/" render={() => <Home />} />
