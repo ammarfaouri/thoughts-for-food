@@ -21,6 +21,9 @@ class NavBar extends Component {
             <Nav.Link>
               <Link to="/Recipes">Recipes</Link>
             </Nav.Link>
+            <Nav.Link>
+              <Link to="/Recipes/New">Create Recipe</Link>
+            </Nav.Link>
           </Nav>
           <Nav className="ml-auto">
             <Nav.Link href="#signIn">Log In</Nav.Link>
