@@ -7,7 +7,7 @@ let recipeSchema = new Schema({
   description: String,
   prepTime: Number,
   difficulty: Number,
-  ingredients: [{ amount: Number, unit: String, name: String }],
+  ingredients: [{ amount: Number, unit: String, ingredientName: String }],
   method: [],
 });
 

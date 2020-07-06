@@ -21,12 +21,12 @@ class Recipes extends Component {
       });
   }
   render() {
-    let miniRecipes = this.state.recipes.map((recipe) => (
+    let recipeList = this.state.recipes.map((recipe) => (
       <MiniRecipe recipe={recipe} key={recipe._id} />
     ));
     return (
       <div className="Recipes">
-        <CardDeck>{miniRecipes}</CardDeck>
+        <CardDeck>{recipeList}</CardDeck>
       </div>
     );
   }

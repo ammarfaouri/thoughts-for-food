@@ -39,7 +39,7 @@ app
     });
   })
   .post(function (req, res) {
-    //adds recipe to collection
+    // adds recipe to collection
     Recipe.create(req.body, function (err, createdRecipe) {
       if (err) {
         console.log(err);

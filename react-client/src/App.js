@@ -18,7 +18,11 @@ class App extends Component {
         <Switch>
           <Route exact path="/About" render={() => <About />} />
           <Route exact path="/Contact" render={() => <Contact />} />
-          <Route exact path="/Recipes/New" render={() => <RecipeForm />} />
+          <Route
+            exact
+            path="/Recipes/New"
+            render={(routeParams) => <RecipeForm {...routeParams} />}
+          />
           <Route
             exact
             path="/Recipes/:id"
