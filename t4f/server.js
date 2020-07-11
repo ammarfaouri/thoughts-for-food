@@ -4,6 +4,7 @@ const port = 5000;
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 var Recipe = require("./Models/recipe");
+var User = require("./Models/user");
 var seedDB = require("./seeds");
 
 // parse application/x-www-form-urlencoded
@@ -88,6 +89,28 @@ app
       }
     });
   });
+
+app.route("/users").post(function (req, res) {
+  // adds user to collection
+  let user = new User(req.body);
+  user.save((err, user) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("User Created", user);
+    }
+  });
+});
+app.route("/login").post(function (req, res) {
+  //find user using email submitted
+  User.findOne({ username: req.body.username }, (user, err) => {
+    if (err || !user || req.body.password !== user.password) {
+      console.log(err);
+    } else {
+      res.status(201).send("Success");
+    }
+  });
+});
 
 app.listen(port, () =>
   console.log(`Example app listening at http://localhost:${port}`)

@@ -7,6 +7,7 @@ import Recipes from "./Recipes";
 import SingleRecipe from "./SingleRecipe";
 import RecipeForm from "./RecipeForm";
 import SignUpForm from "./SignUpForm";
+import LoginForm from "./LoginForm";
 
 import Home from "./Home";
 import "./App.css";
@@ -29,7 +30,16 @@ class App extends Component {
             path="/Recipes/:id"
             render={(routeParams) => <SingleRecipe {...routeParams} />}
           />
-          <Route exact path="/Signup" render={() => <SignUpForm />} />
+          <Route
+            exact
+            path="/Signup"
+            render={(routeParams) => <SignUpForm {...routeParams} />}
+          />
+          <Route
+            exact
+            path="/Login"
+            render={(routeParams) => <LoginForm {...routeParams} />}
+          />
           <Route exact path="/Recipes" render={() => <Recipes />} />
 
           <Route exact path="/" render={() => <Home />} />
