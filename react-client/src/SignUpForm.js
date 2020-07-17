@@ -12,6 +12,7 @@ class SignUpForm extends Component {
       username: "",
       email: "",
       password: "",
+      loggedIn: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -25,6 +26,7 @@ class SignUpForm extends Component {
     e.preventDefault();
     let { firstName, lastName, username, email, password } = this.state;
     let { history } = this.props;
+    let self = this;
     axios({
       method: "post",
       url: "/users",
@@ -37,10 +39,16 @@ class SignUpForm extends Component {
       },
     })
       .then(function (response) {
-        history.push("/");
+        if (response.status === 201) {
+          self.setState({ loggedIn: true });
+          self.props.login({ loggedIn: true, username: self.state.username });
+          history.push("/");
+        }
       })
       .catch(function (error) {
-        console.log(error);
+        if (error.response.status === 409) {
+          console.log(error, "user already exists");
+        }
       });
   }
   render() {

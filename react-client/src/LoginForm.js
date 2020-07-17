@@ -10,6 +10,7 @@ class LoginForm extends Component {
     this.state = {
       username: "",
       password: "",
+      loggedIn: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -21,7 +22,8 @@ class LoginForm extends Component {
   handleSubmit(e) {
     e.preventDefault();
     let { username, password } = this.state;
-    let { history } = this.props;
+    let { history, logIn } = this.props;
+    let self = this;
     axios({
       method: "post",
       url: "/login",
@@ -31,10 +33,18 @@ class LoginForm extends Component {
       },
     })
       .then(function (response) {
-        history.push("/");
+        if (response.status === 200) {
+          self.setState({ loggedIn: true });
+          self.props.login({ loggedIn: true, username: self.state.username });
+          history.push("/");
+        }
       })
       .catch(function (error) {
-        console.log(error);
+        if (error.response.status === 404) {
+          console.log(error, "user does not exist");
+        } else {
+          console.log(error, "password incorrect");
+        }
       });
   }
 

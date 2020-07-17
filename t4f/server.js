@@ -102,7 +102,7 @@ app
   });
 
 app.route("/users").post(function (req, res) {
-  User.findOne({ email: req.body.email }, (err, user) => {
+  User.findOne({ username: req.body.username }, (err, user) => {
     if (!user) {
       req.body.password = bcrypt.hashSync(req.body.password, 10);
       let user = new User(req.body);
@@ -112,29 +112,33 @@ app.route("/users").post(function (req, res) {
         } else {
           console.log("User Created", user);
           req.session.id = user._id;
-          res.send("201");
+          res.sendStatus("201");
         }
       });
     } else {
-      console.log(err, "user already exists");
+      console.log("user already exists");
+      res.sendStatus("409");
     }
   });
 });
 app.route("/login").post(function (req, res) {
   //find user using email submitted
   User.findOne({ username: req.body.username }, (err, user) => {
-    if(!user){
-      console.log("user does not exist")
-    }else{
-      if(bcrypt.compare(req.body.password, user.password, function(err, res) {
-        if(err) console.log(err)
-        if(res){
-          req.session.id = user.id
-        }else{
-          console.log("password incorrect")
-          res.send("401")
+    if (err) console.log(err);
+    if (!user) {
+      console.log("user does not exist");
+      res.sendStatus("404");
+    } else {
+      bcrypt.compare(req.body.password, user.password, function (err, match) {
+        if (err) console.log(err);
+        if (match) {
+          req.session.id = user.id;
+          res.sendStatus("200");
+        } else {
+          console.log("password incorrect");
+          res.sendStatus("401");
         }
-    }))
+      });
     }
   });
 });

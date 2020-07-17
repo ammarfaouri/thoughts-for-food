@@ -13,6 +13,18 @@ import Home from "./Home";
 import "./App.css";
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loggedIn: false,
+      username: "",
+    };
+    this.ToggleLogin = this.ToggleLogin.bind(this);
+  }
+  ToggleLogin(logState) {
+    this.setState(logState);
+  }
+
   render() {
     return (
       <div className="App">
@@ -33,12 +45,16 @@ class App extends Component {
           <Route
             exact
             path="/Signup"
-            render={(routeParams) => <SignUpForm {...routeParams} />}
+            render={(routeParams) => (
+              <SignUpForm login={this.ToggleLogin} {...routeParams} />
+            )}
           />
           <Route
             exact
             path="/Login"
-            render={(routeParams) => <LoginForm {...routeParams} />}
+            render={(routeParams) => (
+              <LoginForm login={this.ToggleLogin} {...routeParams} />
+            )}
           />
           <Route exact path="/Recipes" render={() => <Recipes />} />
 
