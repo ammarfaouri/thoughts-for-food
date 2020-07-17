@@ -6,11 +6,22 @@ const bodyParser = require("body-parser");
 var Recipe = require("./Models/recipe");
 var User = require("./Models/user");
 var seedDB = require("./seeds");
+var session = require("express-session");
+var bcrypt = require("bcryptjs");
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 // parse application/json
 app.use(bodyParser.json());
+
+//Express-session setup
+app.use(
+  session({
+    secret: "Illumi",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 //Mongoose Setup
 mongoose.connect("mongodb://localhost:27017/myapp", {
@@ -91,23 +102,39 @@ app
   });
 
 app.route("/users").post(function (req, res) {
-  // adds user to collection
-  let user = new User(req.body);
-  user.save((err, user) => {
-    if (err) {
-      console.log(err);
+  User.findOne({ email: req.body.email }, (err, user) => {
+    if (!user) {
+      req.body.password = bcrypt.hashSync(req.body.password, 10);
+      let user = new User(req.body);
+      user.save((err, user) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("User Created", user);
+          req.session.id = user._id;
+          res.send("201");
+        }
+      });
     } else {
-      console.log("User Created", user);
+      console.log(err, "user already exists");
     }
   });
 });
 app.route("/login").post(function (req, res) {
   //find user using email submitted
-  User.findOne({ username: req.body.username }, (user, err) => {
-    if (err || !user || req.body.password !== user.password) {
-      console.log(err);
-    } else {
-      res.status(201).send("Success");
+  User.findOne({ username: req.body.username }, (err, user) => {
+    if(!user){
+      console.log("user does not exist")
+    }else{
+      if(bcrypt.compare(req.body.password, user.password, function(err, res) {
+        if(err) console.log(err)
+        if(res){
+          req.session.id = user.id
+        }else{
+          console.log("password incorrect")
+          res.send("401")
+        }
+    }))
     }
   });
 });
