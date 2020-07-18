@@ -50,17 +50,28 @@ app
       }
     });
   })
-  .post(function (req, res) {
-    // adds recipe to collection
-    Recipe.create(req.body, function (err, createdRecipe) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("added recipe from POST request", createdRecipe);
-        res.status(201).send("Success");
-      }
-    });
-  });
+  .post(
+    function checkUser(req, res, next) {
+      // if (isLoggedIn(req)) {
+      //   return next();
+      // } else {
+      //   res.sendStatus("401");
+      // }
+      console.log("logging session id", req.session);
+      next();
+    },
+    function (req, res) {
+      // adds recipe to collection
+      Recipe.create(req.body, function (err, createdRecipe) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("added recipe from POST request", createdRecipe);
+          res.status(201).send("Success");
+        }
+      });
+    }
+  );
 
 app
   .route("/recipes/:id")
@@ -132,7 +143,7 @@ app.route("/login").post(function (req, res) {
       bcrypt.compare(req.body.password, user.password, function (err, match) {
         if (err) console.log(err);
         if (match) {
-          req.session.id = user.id;
+          req.session.id = user._id;
           res.sendStatus("200");
         } else {
           console.log("password incorrect");
@@ -142,6 +153,19 @@ app.route("/login").post(function (req, res) {
     }
   });
 });
+app.route("/logout").get(function (req, res) {
+  //destroy session
+  req.session.destroy((err) => console.log(err));
+  res.sendStatus("200");
+});
+
+//check logged in status
+function isLoggedIn(req) {
+  if (req.session.id) {
+    return true;
+  }
+  return false;
+}
 
 app.listen(port, () =>
   console.log(`Example app listening at http://localhost:${port}`)

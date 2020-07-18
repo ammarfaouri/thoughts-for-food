@@ -26,16 +26,27 @@ class App extends Component {
   }
 
   render() {
+    let { loggedIn, username } = this.state;
     return (
       <div className="App">
-        <NavBar />
+        <NavBar
+          loggedIn={loggedIn}
+          username={username}
+          login={this.ToggleLogin}
+        />
         <Switch>
           <Route exact path="/About" render={() => <About />} />
           <Route exact path="/Contact" render={() => <Contact />} />
           <Route
             exact
             path="/Recipes/New"
-            render={(routeParams) => <RecipeForm {...routeParams} />}
+            render={(routeParams) => (
+              <RecipeForm
+                loggedIn={loggedIn}
+                author={username}
+                {...routeParams}
+              />
+            )}
           />
           <Route
             exact

@@ -1,10 +1,36 @@
 import React, { Component } from "react";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
+import Badge from "react-bootstrap/Badge";
+import Button from "react-bootstrap/Button";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { withRouter } from "react-router-dom";
 
 class NavBar extends Component {
+  constructor(props) {
+    super(props);
+    this.handleSignOut = this.handleSignOut.bind(this);
+  }
+
+  handleSignOut() {
+    console.log("button click");
+    //destroy session
+    let self = this;
+    axios
+      .get("/logout")
+      //setstate in parent component
+      .then((response) => {
+        self.props.login({ loggedIn: false, username: "" });
+        this.props.history.push("/");
+      })
+      .catch(function (error) {
+        // handle error
+        console.log(error);
+      });
+  }
   render() {
+    let { loggedIn, username } = this.props;
     return (
       <div className="NavBar">
         <Navbar bg="dark" variant="dark">
@@ -18,25 +44,40 @@ class NavBar extends Component {
             <Nav.Link>
               <Link to="/Contact">Contact Us</Link>
             </Nav.Link>
+
             <Nav.Link>
               <Link to="/Recipes">Recipes</Link>
             </Nav.Link>
-            <Nav.Link>
-              <Link to="/Recipes/New">Create Recipe</Link>
-            </Nav.Link>
+            {loggedIn ? (
+              <Nav.Link>
+                <Link to="/Recipes/New">Create Recipe</Link>
+              </Nav.Link>
+            ) : null}
           </Nav>
-          <Nav className="ml-auto">
-            <Nav.Link>
-              <Link to="/Login"> Log In</Link>
-            </Nav.Link>
-            <Nav.Link>
-              <Link to="/Signup"> Sign Up</Link>
-            </Nav.Link>
-          </Nav>
+
+          {loggedIn ? (
+            <Nav className="ml-auto">
+              <Badge pill variant="info">
+                Signed in as {username}
+              </Badge>
+              <Button onClick={this.handleSignOut} variant="warning">
+                Sign Out
+              </Button>
+            </Nav>
+          ) : (
+            <Nav className="ml-auto">
+              <Nav.Link>
+                <Link to="/Login"> Log In</Link>
+              </Nav.Link>
+              <Nav.Link>
+                <Link to="/Signup"> Sign Up</Link>
+              </Nav.Link>
+            </Nav>
+          )}
         </Navbar>
       </div>
     );
   }
 }
 
-export default NavBar;
+export default withRouter(NavBar);

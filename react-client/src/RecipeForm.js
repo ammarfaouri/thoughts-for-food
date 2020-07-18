@@ -9,7 +9,7 @@ class RecipeForm extends Component {
     super(props);
     this.state = {
       name: "",
-      author: "",
+      author: this.props.username,
       description: "",
       prepTime: "",
       difficulty: "",
@@ -224,81 +224,89 @@ class RecipeForm extends Component {
       );
     });
 
-    return (
-      <div
-        className="RecipeForm"
-        style={{
-          width: "50%",
-          margin: "auto",
-          marginTop: "5rem",
-          border: "solid 0.1rem",
-        }}
-      >
-        <h2>Create your recipe</h2>
-        <Form onSubmit={this.handleSubmit}>
-          <Form.Row>
-            <Form.Group as={Col} controlId="name">
-              <Form.Label>Name</Form.Label>
+    if (this.props.loggedIn) {
+      return (
+        <div
+          className="RecipeForm"
+          style={{
+            width: "50%",
+            margin: "auto",
+            marginTop: "5rem",
+            border: "solid 0.1rem",
+          }}
+        >
+          <h2>Create your recipe</h2>
+          <Form onSubmit={this.handleSubmit}>
+            <Form.Row>
+              <Form.Group as={Col} controlId="name">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={this.handleChange}
+                />
+              </Form.Group>
+
+              <Form.Group as={Col} controlId="prepTime">
+                <Form.Label>Preparation time</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Preparation time"
+                  value={prepTime}
+                  onChange={this.handleChange}
+                />
+              </Form.Group>
+            </Form.Row>
+
+            <Form.Group controlId="description">
+              <Form.Label>description</Form.Label>
               <Form.Control
-                type="text"
-                placeholder="Name"
-                value={name}
+                as="textarea"
+                rows="7"
+                placeholder="Description"
+                value={description}
                 onChange={this.handleChange}
               />
             </Form.Group>
 
-            <Form.Group as={Col} controlId="prepTime">
-              <Form.Label>Preparation time</Form.Label>
+            <Form.Group controlId="difficulty">
+              <Form.Label>difficulty</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Preparation time"
-                value={prepTime}
+                placeholder="difficulty"
+                value={difficulty}
                 onChange={this.handleChange}
               />
             </Form.Group>
-          </Form.Row>
+            <h3>ingredients</h3>
+            <Button onClick={this.handleAddIngredient} variant="primary">
+              Add ingredient
+            </Button>
+            {ingredientForms}
+            <h3>method</h3>
+            <Button onClick={this.handleAddMethod} variant="primary">
+              Add step
+            </Button>
+            {methodForms}
 
-          <Form.Group controlId="description">
-            <Form.Label>description</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows="7"
-              placeholder="Description"
-              value={description}
-              onChange={this.handleChange}
-            />
-          </Form.Group>
+            <Form.Group id="formGridCheckbox">
+              <Form.Check type="checkbox" label="Check me out" />
+            </Form.Group>
 
-          <Form.Group controlId="difficulty">
-            <Form.Label>difficulty</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="difficulty"
-              value={difficulty}
-              onChange={this.handleChange}
-            />
-          </Form.Group>
-          <h3>ingredients</h3>
-          <Button onClick={this.handleAddIngredient} variant="primary">
-            Add ingredient
-          </Button>
-          {ingredientForms}
-          <h3>method</h3>
-          <Button onClick={this.handleAddMethod} variant="primary">
-            Add step
-          </Button>
-          {methodForms}
-
-          <Form.Group id="formGridCheckbox">
-            <Form.Check type="checkbox" label="Check me out" />
-          </Form.Group>
-
-          <Button variant="primary" type="submit">
-            Submit
-          </Button>
-        </Form>
-      </div>
-    );
+            <Button variant="primary" type="submit">
+              Submit
+            </Button>
+          </Form>
+        </div>
+      );
+    } else {
+      return (
+        <div className="RecipeForm">
+          <h1>You must be signed in to create a recipe</h1>
+        </div>
+      );
+    }
   }
 }
 export default RecipeForm;
