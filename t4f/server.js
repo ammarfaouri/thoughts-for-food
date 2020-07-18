@@ -7,6 +7,7 @@ var Recipe = require("./Models/recipe");
 var User = require("./Models/user");
 var seedDB = require("./seeds");
 var session = require("express-session");
+const MongoStore = require("connect-mongo")(session);
 var bcrypt = require("bcryptjs");
 
 // parse application/x-www-form-urlencoded
@@ -14,20 +15,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // parse application/json
 app.use(bodyParser.json());
 
+//Mongoose Setup
+mongoose.connect("mongodb://localhost:27017/myapp", {
+  useNewUrlParser: true,
+  useFindAndModify: false,
+});
+
 //Express-session setup
 app.use(
   session({
     secret: "Illumi",
     resave: false,
     saveUninitialized: true,
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+    }),
   })
 );
 
-//Mongoose Setup
-mongoose.connect("mongodb://localhost:27017/myapp", {
-  useNewUrlParser: true,
-  useFindAndModify: false,
-});
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
 db.once("open", function () {
@@ -42,6 +47,7 @@ app
 
   .get(function (req, res) {
     //retrieve all recipes
+    console.log(req.session);
     Recipe.find({}, function (err, recipes) {
       if (err) {
         console.log(err);
@@ -51,14 +57,12 @@ app
     });
   })
   .post(
-    function checkUser(req, res, next) {
-      // if (isLoggedIn(req)) {
-      //   return next();
-      // } else {
-      //   res.sendStatus("401");
-      // }
-      console.log("logging session id", req.session);
-      next();
+    function isLogged(req, res, next) {
+      if (req.session.user) {
+        next();
+      } else {
+        res.sendStatus("401");
+      }
     },
     function (req, res) {
       // adds recipe to collection
@@ -122,7 +126,7 @@ app.route("/users").post(function (req, res) {
           console.log(err);
         } else {
           console.log("User Created", user);
-          req.session.id = user._id;
+          req.session.user = user;
           res.sendStatus("201");
         }
       });
@@ -143,7 +147,7 @@ app.route("/login").post(function (req, res) {
       bcrypt.compare(req.body.password, user.password, function (err, match) {
         if (err) console.log(err);
         if (match) {
-          req.session.id = user._id;
+          req.session.user = user;
           res.sendStatus("200");
         } else {
           console.log("password incorrect");
@@ -159,13 +163,13 @@ app.route("/logout").get(function (req, res) {
   res.sendStatus("200");
 });
 
-//check logged in status
-function isLoggedIn(req) {
-  if (req.session.id) {
-    return true;
-  }
-  return false;
-}
+// //check logged in status
+// function isLoggedIn(req) {
+//   if (req.session.id) {
+//     return true;
+//   }
+//   return false;
+// }
 
 app.listen(port, () =>
   console.log(`Example app listening at http://localhost:${port}`)
