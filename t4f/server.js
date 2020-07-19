@@ -39,7 +39,7 @@ db.once("open", function () {
   console.log("Database is connected");
 });
 
-//populate db with seed files
+// //populate db with seed files
 seedDB();
 
 app
@@ -94,14 +94,22 @@ app
     //finds recipe by id and updates it
     let id = req.params.id;
     let recipe = req.body;
-    Recipe.findOneAndUpdate(id, recipe, function (err, updatedRecipe) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(`recipe with id ${id} updated`, updatedRecipe);
-      }
-    });
-    res.end("yes");
+    if (req.session.user && req.session.user.username === req.body.author) {
+      Recipe.findByIdAndUpdate(id, recipe, function (err, updatedRecipe) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(
+            `recipe with id ${id} updated`,
+            updatedRecipe.ingredients
+          );
+
+          res.sendStatus("200");
+        }
+      });
+    } else {
+      res.sendStatus("401");
+    }
   })
   .delete(function (req, res) {
     //deletes recipe with id from Database

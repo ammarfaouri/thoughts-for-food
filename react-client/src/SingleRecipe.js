@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import Button from "react-bootstrap/Button";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 class SingleRecipe extends Component {
@@ -64,6 +66,13 @@ class SingleRecipe extends Component {
         <h3>{difficulty}</h3>
         <ul>{ingredientList}</ul>
         <ui>{methodList}</ui>
+        <Link to={`/Recipes/${this.props.match.params.id}/edit`}>
+          <Button variant="warning">Edit Recipe</Button>
+        </Link>
+
+        <Link to="/">
+          <Button variant="danger">Delete Recipe</Button>
+        </Link>
       </div>
     );
   }

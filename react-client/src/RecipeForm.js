@@ -9,7 +9,7 @@ class RecipeForm extends Component {
     super(props);
     this.state = {
       name: "",
-      author: this.props.username,
+      author: "",
       description: "",
       prepTime: "",
       difficulty: "",
@@ -24,6 +24,35 @@ class RecipeForm extends Component {
     this.handleMethodChange = this.handleMethodChange.bind(this);
     this.handleMethodDelete = this.handleMethodDelete.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  componentDidMount() {
+    if (this.props.edit) {
+      let self = this;
+      let { user, match, history } = this.props;
+      axios
+        .get(`/recipes/${match.params.id}`)
+        .then((response) => {
+          let { data } = response;
+          if (data.author === user) {
+            self.setState({
+              name: data.name,
+              author: user,
+              description: data.description,
+              prepTime: data.prepTime,
+              difficulty: data.difficulty,
+              ingredients: data.ingredients,
+              method: data.method,
+            });
+          } else {
+            history.push("/nicetry");
+          }
+        })
+        .catch(function (error) {
+          // handle error
+          console.log(error);
+        });
+    }
   }
 
   handleChange(e) {
@@ -103,37 +132,60 @@ class RecipeForm extends Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    let { history } = this.props;
+    let { history, match, user, edit } = this.props;
 
     let {
       name,
-      author,
       description,
       prepTime,
+      author,
       difficulty,
       ingredients,
       method,
     } = this.state;
+    let self = this;
 
-    axios({
-      method: "post",
-      url: "/recipes",
-      data: {
-        name: name,
-        author: author,
-        description: description,
-        prepTime: prepTime,
-        difficulty: difficulty,
-        ingredients: ingredients,
-        method: method,
-      },
-    })
-      .then(function (response) {
-        history.push("/Recipes");
+    if (edit) {
+      axios({
+        method: "put",
+        url: `/recipes/${match.params.id}`,
+        data: {
+          name: name,
+          author: user,
+          description: description,
+          prepTime: prepTime,
+          difficulty: difficulty,
+          ingredients: ingredients,
+          method: method,
+        },
       })
-      .catch(function (error) {
-        console.log(error);
-      });
+        .then(function (response) {
+          history.push(`/Recipes/${match.params.id}`);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    } else {
+      axios({
+        method: "post",
+        url: "/recipes",
+        data: {
+          name: name,
+          author: user,
+          description: description,
+          prepTime: prepTime,
+          difficulty: difficulty,
+          ingredients: ingredients,
+          method: method,
+        },
+      })
+        .then(function (response) {
+          history.push("/Recipes");
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
   }
 
   render() {

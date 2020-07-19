@@ -43,7 +43,7 @@ class App extends Component {
             render={(routeParams) => (
               <RecipeForm
                 loggedIn={loggedIn}
-                author={username}
+                user={username}
                 {...routeParams}
               />
             )}
@@ -52,6 +52,18 @@ class App extends Component {
             exact
             path="/Recipes/:id"
             render={(routeParams) => <SingleRecipe {...routeParams} />}
+          />
+          <Route
+            exact
+            path="/Recipes/:id/edit"
+            render={(routeParams) => (
+              <RecipeForm
+                loggedIn={loggedIn}
+                user={username}
+                edit
+                {...routeParams}
+              />
+            )}
           />
           <Route
             exact
