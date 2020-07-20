@@ -14,7 +14,6 @@ class NavBar extends Component {
   }
 
   handleSignOut() {
-    console.log("button click");
     //destroy session
     let self = this;
     axios

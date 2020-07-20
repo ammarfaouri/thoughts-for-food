@@ -167,6 +167,15 @@ app.route("/login").post(function (req, res) {
     }
   });
 });
+
+app.route("/logged").get(function (req, res) {
+  //check if session exists
+  if (req.session) {
+    res.status("200").send(req.session.user.username);
+  } else {
+    res.sendStatus("404");
+  }
+});
 app.route("/logout").get(function (req, res) {
   //destroy session
   req.session.destroy((err) => console.log(err));

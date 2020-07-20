@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Switch, Route } from "react-router-dom";
+import axios from "axios";
 import NavBar from "./NavBar";
 import About from "./About";
 import Contact from "./Contact";
@@ -23,6 +24,19 @@ class App extends Component {
   }
   ToggleLogin(logState) {
     this.setState(logState);
+  }
+
+  componentDidMount() {
+    let self = this;
+    axios
+      .get("/logged")
+      .then((response) =>
+        self.setState({ username: response.data, loggedIn: true })
+      )
+      .catch(function (error) {
+        // handle error
+        console.log(error);
+      });
   }
 
   render() {
