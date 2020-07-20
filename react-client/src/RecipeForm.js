@@ -37,7 +37,7 @@ class RecipeForm extends Component {
           if (data.author === user) {
             self.setState({
               name: data.name,
-              author: user,
+              author: data.author,
               description: data.description,
               prepTime: data.prepTime,
               difficulty: data.difficulty,
@@ -151,7 +151,7 @@ class RecipeForm extends Component {
         url: `/recipes/${match.params.id}`,
         data: {
           name: name,
-          author: user,
+          author: author,
           description: description,
           prepTime: prepTime,
           difficulty: difficulty,
@@ -180,7 +180,7 @@ class RecipeForm extends Component {
         },
       })
         .then(function (response) {
-          history.push("/Recipes");
+          history.push(`/Recipes/${response.data}`);
         })
         .catch(function (error) {
           console.log(error);

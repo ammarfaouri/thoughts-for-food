@@ -51,7 +51,9 @@ class App extends Component {
           <Route
             exact
             path="/Recipes/:id"
-            render={(routeParams) => <SingleRecipe {...routeParams} />}
+            render={(routeParams) => (
+              <SingleRecipe user={username} {...routeParams} />
+            )}
           />
           <Route
             exact

@@ -47,7 +47,6 @@ app
 
   .get(function (req, res) {
     //retrieve all recipes
-    console.log(req.session);
     Recipe.find({}, function (err, recipes) {
       if (err) {
         console.log(err);
@@ -71,7 +70,7 @@ app
           console.log(err);
         } else {
           console.log("added recipe from POST request", createdRecipe);
-          res.status(201).send("Success");
+          res.status(201).send(createdRecipe._id);
         }
       });
     }
@@ -99,29 +98,32 @@ app
         if (err) {
           console.log(err);
         } else {
-          console.log(
-            `recipe with id ${id} updated`,
-            updatedRecipe.ingredients
-          );
+          console.log(`recipe with id ${id} updated`, updatedRecipe);
 
           res.sendStatus("200");
         }
       });
     } else {
+      console.log("unauthorized to edit");
       res.sendStatus("401");
     }
   })
   .delete(function (req, res) {
     //deletes recipe with id from Database
     let id = req.params.id;
-
-    Recipe.findOneAndDelete(id, function () {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(`Deleted Recipe with id ${id}`);
-      }
-    });
+    if (req.session.user && req.session.user.username === req.body.author) {
+      Recipe.findByIdAndDelete(id, function (err, deletedRecipe) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(`Deleted Recipe with id ${id}`, deletedRecipe);
+          res.sendStatus("200");
+        }
+      });
+    } else {
+      console.log("unauthorized to delete");
+      res.sendStatus("401");
+    }
   });
 
 app.route("/users").post(function (req, res) {
