@@ -40,7 +40,7 @@ db.once("open", function () {
 });
 
 // //populate db with seed files
-seedDB();
+// seedDB();
 
 app
   .route("/recipes")
@@ -176,6 +176,38 @@ app.route("/logged").get(function (req, res) {
     res.sendStatus("404");
   }
 });
+
+app.route("/users/:username").get(function (req, res) {
+  let username = req.params.username;
+
+  User.findOne({ username: username }, function (err, user) {
+    if (err) {
+      console.log(err);
+    } else {
+      Recipe.find({ author: username }, (err, recipes) => {
+        if (err) {
+          console.log(err);
+        } else {
+          let recipesInfo = recipes.map((recipe) => ({
+            name: recipe.name,
+            author: recipe.author,
+            description: recipe.description,
+            _id: recipe._id,
+          }));
+
+          let info = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            recipesInfo: recipesInfo,
+          };
+          res.status("200").send(info);
+        }
+      });
+    }
+  });
+});
+
 app.route("/logout").get(function (req, res) {
   //destroy session
   req.session.destroy((err) => console.log(err));

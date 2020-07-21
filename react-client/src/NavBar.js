@@ -29,7 +29,7 @@ class NavBar extends Component {
       });
   }
   render() {
-    let { loggedIn, username } = this.props;
+    let { loggedIn, user } = this.props;
     return (
       <div className="NavBar">
         <Navbar bg="dark" variant="dark">
@@ -57,8 +57,11 @@ class NavBar extends Component {
           {loggedIn ? (
             <Nav className="ml-auto">
               <Badge pill variant="info">
-                Signed in as {username}
+                Signed in as {user}
               </Badge>
+              <Nav.Link>
+                <Link to={`/Users/${this.props.user}`}>Profile</Link>
+              </Nav.Link>
               <Button onClick={this.handleSignOut} variant="warning">
                 Sign Out
               </Button>

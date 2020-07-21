@@ -4,14 +4,7 @@ import { Link } from "react-router-dom";
 
 class MiniRecipe extends Component {
   render() {
-    let {
-      name,
-      author,
-      description,
-      prepTime,
-      difficulty,
-      _id,
-    } = this.props.recipe;
+    let { name, author, description, _id } = this.props.recipe;
     return (
       <Card className="mt-5">
         <Card.Body>
