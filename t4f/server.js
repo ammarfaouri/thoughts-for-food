@@ -128,12 +128,17 @@ app
 
 app.route("/users").post(function (req, res) {
   User.findOne({ username: req.body.username }, (err, user) => {
+    if (err) {
+      console.log(err);
+      res.sendStatus("500");
+    }
     if (!user) {
       req.body.password = bcrypt.hashSync(req.body.password, 10);
       let user = new User(req.body);
       user.save((err, user) => {
         if (err) {
           console.log(err);
+          res.sendStatus("500");
         } else {
           console.log("User Created", user);
           req.session.user = user;

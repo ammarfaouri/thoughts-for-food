@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 import axios from "axios";
 
 class SignUpForm extends Component {
@@ -13,6 +14,8 @@ class SignUpForm extends Component {
       email: "",
       password: "",
       loggedIn: false,
+      responseStatus: "",
+      validated: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -24,39 +27,54 @@ class SignUpForm extends Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    let { firstName, lastName, username, email, password } = this.state;
-    let { history } = this.props;
-    let self = this;
-    axios({
-      method: "post",
-      url: "/users",
-      data: {
-        firstName: firstName,
-        lastName: lastName,
-        username: username,
-        email: email,
-        password: password,
-      },
-    })
-      .then(function (response) {
-        if (response.status === 201) {
-          self.setState({ loggedIn: true });
-          self.props.login({ loggedIn: true, username: self.state.username });
-          history.push(`/Users/${username}`);
-        }
+    this.setState({ validated: true, responseStatus: "" });
+
+    if (e.currentTarget.checkValidity()) {
+      let { firstName, lastName, username, email, password } = this.state;
+      let { history } = this.props;
+      let self = this;
+      axios({
+        method: "post",
+        url: "/users",
+        data: {
+          firstName: firstName,
+          lastName: lastName,
+          username: username,
+          email: email,
+          password: password,
+        },
       })
-      .catch(function (error) {
-        if (error.response.status === 409) {
-          console.log(error, "user already exists");
-        }
-      });
+        .then(function (response) {
+          if (response.status === 201) {
+            self.setState({ loggedIn: true, responseStatus: "201" });
+            self.props.login({ loggedIn: true, username: self.state.username });
+            history.push(`/Users/${username}`);
+          }
+        })
+        .catch(function (error) {
+          self.setState({ responseStatus: error.response.status });
+        });
+    }
   }
   render() {
-    let { firstName, lastName, username, email, password } = this.state;
+    let {
+      firstName,
+      lastName,
+      username,
+      email,
+      password,
+      validated,
+    } = this.state;
     return (
       <div className="SignUpForm" style={{ width: "50%", margin: "auto" }}>
+        {this.state.responseStatus === 500 && (
+          <Alert variant="danger">
+            Server Cannot handle your request at the moment
+          </Alert>
+        )}
+
         <h2>Create your account!</h2>
-        <Form onSubmit={this.handleSubmit}>
+        <Form noValidate validated={validated} onSubmit={this.handleSubmit}>
           <Form.Group controlId="firstName">
             <Form.Label>First Name</Form.Label>
             <Form.Control
@@ -64,7 +82,9 @@ class SignUpForm extends Component {
               placeholder="First Name"
               value={firstName}
               onChange={this.handleChange}
+              required
             />
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="lastName">
             <Form.Label>Last Name</Form.Label>
@@ -73,7 +93,9 @@ class SignUpForm extends Component {
               placeholder="Last Name"
               value={lastName}
               onChange={this.handleChange}
+              required
             />
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="username">
             <Form.Label>Username</Form.Label>
@@ -82,7 +104,15 @@ class SignUpForm extends Component {
               placeholder="Username"
               value={username}
               onChange={this.handleChange}
+              required
+              isInvalid={this.state.responseStatus === 409}
             />
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">
+              {this.state.responseStatus === 409
+                ? "User already exists"
+                : "Username required"}
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="email">
             <Form.Label>Email address</Form.Label>
@@ -91,7 +121,9 @@ class SignUpForm extends Component {
               placeholder="Enter email"
               value={email}
               onChange={this.handleChange}
+              required
             />
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group controlId="password">
@@ -101,7 +133,9 @@ class SignUpForm extends Component {
               placeholder="Password"
               value={password}
               onChange={this.handleChange}
+              required
             />
+            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
           </Form.Group>
 
           <Button variant="primary" type="submit">
