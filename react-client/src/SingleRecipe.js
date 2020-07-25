@@ -16,6 +16,7 @@ class SingleRecipe extends Component {
       ingredients: [],
       method: [],
       showModal: false,
+      editAndDelete: false,
     };
 
     this.toggleModal = this.toggleModal.bind(this);
@@ -58,6 +59,7 @@ class SingleRecipe extends Component {
           difficulty: data.difficulty,
           ingredients: data.ingredients,
           method: data.method,
+          editAndDelete: this.props.user === data.author,
         });
       })
       .catch(function (error) {
@@ -75,6 +77,7 @@ class SingleRecipe extends Component {
       ingredients,
       method,
       showModal,
+      editAndDelete,
     } = this.state;
     let ingredientList = ingredients.map((ingredient) => {
       return (
@@ -97,7 +100,7 @@ class SingleRecipe extends Component {
         <ul>{ingredientList}</ul>
         <ui>{methodList}</ui>
 
-        {this.props.user === author ? (
+        {editAndDelete ? (
           <div className="buttons">
             <Link to={`/Recipes/${this.props.match.params.id}/edit`}>
               <Button variant="warning">Edit Recipe</Button>
