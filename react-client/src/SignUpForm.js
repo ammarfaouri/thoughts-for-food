@@ -84,7 +84,12 @@ class SignUpForm extends Component {
               onChange={this.handleChange}
               required
             />
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="valid">
+              Looks good!
+            </Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">
+              First Name required
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="lastName">
             <Form.Label>Last Name</Form.Label>
@@ -95,7 +100,12 @@ class SignUpForm extends Component {
               onChange={this.handleChange}
               required
             />
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="valid">
+              Looks good!
+            </Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">
+              Last Name required
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group controlId="username">
             <Form.Label>Username</Form.Label>
@@ -123,7 +133,12 @@ class SignUpForm extends Component {
               onChange={this.handleChange}
               required
             />
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="valid">
+              Looks good!
+            </Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">
+              Email required
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group controlId="password">
@@ -135,7 +150,12 @@ class SignUpForm extends Component {
               onChange={this.handleChange}
               required
             />
-            <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="valid">
+              Looks good!
+            </Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid">
+              Password required
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Button variant="primary" type="submit">
