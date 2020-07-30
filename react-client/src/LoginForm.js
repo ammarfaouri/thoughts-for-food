@@ -19,6 +19,7 @@ class LoginForm extends Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
   handleChange(e) {
     this.setState({ [e.target.id]: e.target.value });
   }
@@ -55,57 +56,62 @@ class LoginForm extends Component {
 
   render() {
     let { username, password, validated } = this.state;
-    return (
-      <div className="LoginForm" style={{ width: "50%", margin: "auto" }}>
-        {this.state.responseStatus === 500 && (
-          <Alert variant="danger">
-            Server cannot handle your request at the moment
-          </Alert>
-        )}
 
-        <Form noValidate validated={validated} onSubmit={this.handleSubmit}>
-          <Form.Group controlId="username">
-            <Form.Label>Username</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={this.handleChange}
-              isInvalid={this.state.responseStatus === 404}
-              required
-            />
+    if (!this.props.loggedIn) {
+      return (
+        <div className="LoginForm" style={{ width: "50%", margin: "auto" }}>
+          {this.state.responseStatus === 500 && (
+            <Alert variant="danger">
+              Server cannot handle your request at the moment
+            </Alert>
+          )}
 
-            <Form.Control.Feedback type="invalid">
-              {this.state.responseStatus === 404
-                ? "User does not exist"
-                : "Username required"}
-            </Form.Control.Feedback>
-          </Form.Group>
+          <Form noValidate validated={validated} onSubmit={this.handleSubmit}>
+            <Form.Group controlId="username">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={this.handleChange}
+                isInvalid={this.state.responseStatus === 404}
+                required
+              />
 
-          <Form.Group controlId="password">
-            <Form.Label>Password</Form.Label>
-            <Form.Control
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={this.handleChange}
-              isInvalid={this.state.responseStatus === 401}
-              required
-            />
+              <Form.Control.Feedback type="invalid">
+                {this.state.responseStatus === 404
+                  ? "User does not exist"
+                  : "Username required"}
+              </Form.Control.Feedback>
+            </Form.Group>
 
-            <Form.Control.Feedback type="invalid">
-              {this.state.responseStatus === 401
-                ? "Password incorrect"
-                : "Password required"}
-            </Form.Control.Feedback>
-          </Form.Group>
+            <Form.Group controlId="password">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={this.handleChange}
+                isInvalid={this.state.responseStatus === 401}
+                required
+              />
 
-          <Button variant="primary" type="submit">
-            Log in{" "}
-          </Button>
-        </Form>
-      </div>
-    );
+              <Form.Control.Feedback type="invalid">
+                {this.state.responseStatus === 401
+                  ? "Password incorrect"
+                  : "Password required"}
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Button variant="primary" type="submit">
+              Log in{" "}
+            </Button>
+          </Form>
+        </div>
+      );
+    } else {
+      return <div className="LoginForm">You are already signed in</div>;
+    }
   }
 }
 

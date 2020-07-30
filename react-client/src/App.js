@@ -21,9 +21,9 @@ class App extends Component {
       loggedIn: false,
       username: "",
     };
-    this.ToggleLogin = this.ToggleLogin.bind(this);
+    this.toggleLogin = this.toggleLogin.bind(this);
   }
-  ToggleLogin(logState) {
+  toggleLogin(logState) {
     this.setState(logState);
   }
 
@@ -44,7 +44,7 @@ class App extends Component {
     let { loggedIn, username } = this.state;
     return (
       <div className="App">
-        <NavBar loggedIn={loggedIn} user={username} login={this.ToggleLogin} />
+        <NavBar loggedIn={loggedIn} user={username} login={this.toggleLogin} />
         <Switch>
           <Route exact path="/About" render={() => <About />} />
           <Route exact path="/Contact" render={() => <Contact />} />
@@ -83,14 +83,22 @@ class App extends Component {
             exact
             path="/Signup"
             render={(routeParams) => (
-              <SignUpForm login={this.ToggleLogin} {...routeParams} />
+              <SignUpForm
+                loggedIn={loggedIn}
+                login={this.toggleLogin}
+                {...routeParams}
+              />
             )}
           />
           <Route
             exact
             path="/Login"
             render={(routeParams) => (
-              <LoginForm login={this.ToggleLogin} {...routeParams} />
+              <LoginForm
+                loggedIn={loggedIn}
+                login={this.toggleLogin}
+                {...routeParams}
+              />
             )}
           />
           <Route
