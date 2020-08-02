@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
+import Spinner from "react-bootstrap/Spinner";
 import axios from "axios";
 
 class SignUpForm extends Component {
@@ -16,6 +17,7 @@ class SignUpForm extends Component {
       loggedIn: false,
       responseStatus: "",
       validated: false,
+      disableButton: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -27,7 +29,7 @@ class SignUpForm extends Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    this.setState({ validated: true, responseStatus: "" });
+    this.setState({ validated: true, responseStatus: "", disableButton: true });
 
     if (e.currentTarget.checkValidity()) {
       let { firstName, lastName, username, email, password } = this.state;
@@ -52,8 +54,13 @@ class SignUpForm extends Component {
           }
         })
         .catch(function (error) {
-          self.setState({ responseStatus: error.response.status });
+          self.setState({
+            responseStatus: error.response.status,
+            disableButton: false,
+          });
         });
+    } else {
+      this.setState({ disableButton: false });
     }
   }
   render() {
@@ -159,8 +166,21 @@ class SignUpForm extends Component {
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Button variant="primary" type="submit">
-              Create Account
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={this.state.disableButton}
+            >
+              {this.state.disableButton ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </Form>
         </div>

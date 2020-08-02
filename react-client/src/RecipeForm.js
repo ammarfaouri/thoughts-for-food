@@ -3,6 +3,7 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
 import Alert from "react-bootstrap/Alert";
+import Spinner from "react-bootstrap/Spinner";
 
 import axios from "axios";
 
@@ -19,6 +20,7 @@ class RecipeForm extends Component {
       method: [""],
       responseStatus: "",
       validated: false,
+      disableButton: false,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -148,7 +150,7 @@ class RecipeForm extends Component {
       method,
     } = this.state;
     let self = this;
-    this.setState({ validated: true, responseStatus: "" });
+    this.setState({ validated: true, responseStatus: "", disableButton: true });
     if (e.currentTarget.checkValidity()) {
       if (edit) {
         axios({
@@ -169,6 +171,10 @@ class RecipeForm extends Component {
           })
           .catch(function (error) {
             console.log(error);
+            this.setState({
+              responseStatus: error.response.status,
+              disableButton: false,
+            });
           });
       } else {
         axios({
@@ -188,9 +194,14 @@ class RecipeForm extends Component {
             history.push(`/Recipes/${response.data}`);
           })
           .catch(function (error) {
-            self.setState({ responseStatus: error.response.status });
+            self.setState({
+              responseStatus: error.response.status,
+              disableButton: false,
+            });
           });
       }
+    } else {
+      this.setState({ disableButton: false });
     }
   }
 
@@ -306,6 +317,10 @@ class RecipeForm extends Component {
               Server cannot handle your request at the moment
             </Alert>
           )}
+          {this.state.responseStatus === 401 && (
+            <Alert variant="danger">unauthorized request</Alert>
+          )}
+
           <h2>Create your recipe</h2>
           <Form
             noValidate
@@ -374,8 +389,21 @@ class RecipeForm extends Component {
             </Button>
             {methodForms}
 
-            <Button variant="primary" type="submit">
-              Submit
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={this.state.disableButton}
+            >
+              {this.state.disableButton ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Create Recipe"
+              )}
             </Button>
           </Form>
         </div>
