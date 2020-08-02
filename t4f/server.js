@@ -98,6 +98,7 @@ app
       Recipe.findByIdAndUpdate(id, recipe, function (err, updatedRecipe) {
         if (err) {
           console.log(err);
+          res.sendStatus("500");
         } else {
           console.log(`recipe with id ${id} updated`, updatedRecipe);
 
@@ -116,6 +117,7 @@ app
       Recipe.findByIdAndDelete(id, function (err, deletedRecipe) {
         if (err) {
           console.log(err);
+          res.sendStatus("500");
         } else {
           console.log(`Deleted Recipe with id ${id}`, deletedRecipe);
           res.sendStatus("200");

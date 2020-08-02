@@ -2,6 +2,9 @@ import React, { Component } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { Link } from "react-router-dom";
+import Alert from "react-bootstrap/Alert";
+import Spinner from "react-bootstrap/Spinner";
+
 import axios from "axios";
 
 class SingleRecipe extends Component {
@@ -17,6 +20,8 @@ class SingleRecipe extends Component {
       method: [],
       showModal: false,
       editAndDelete: false,
+      responseStatus: "",
+      disableButton: false,
     };
 
     this.toggleModal = this.toggleModal.bind(this);
@@ -29,6 +34,8 @@ class SingleRecipe extends Component {
   }
   handleDelete() {
     let self = this;
+    this.setState({ responseStatus: "", disableButton: true });
+
     axios({
       method: "delete",
       url: `/recipes/${self.props.match.params.id}`,
@@ -43,6 +50,10 @@ class SingleRecipe extends Component {
       })
       .catch(function (error) {
         console.log(error);
+        self.setState({
+          responseStatus: error.response.status,
+          disableButton: false,
+        });
       });
   }
 
@@ -116,13 +127,36 @@ class SingleRecipe extends Component {
           <Modal.Header closeButton>
             <Modal.Title>Deleting Recipe</Modal.Title>
           </Modal.Header>
-          <Modal.Body>Are you Sure you want to delete this recipe?</Modal.Body>
+          <Modal.Body>
+            Are you Sure you want to delete this recipe?
+            {this.state.responseStatus === 500 && (
+              <Alert variant="danger">
+                Server cannot handle your request at the moment
+              </Alert>
+            )}
+            {this.state.responseStatus === 401 && (
+              <Alert variant="danger">unauthorized request</Alert>
+            )}
+          </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={this.toggleModal}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={this.handleDelete}>
-              Delete Recipe
+            <Button
+              variant="danger"
+              disabled={this.state.disableButton}
+              onClick={this.handleDelete}
+            >
+              {this.state.disableButton ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Delete Recipe"
+              )}
             </Button>
           </Modal.Footer>
         </Modal>
