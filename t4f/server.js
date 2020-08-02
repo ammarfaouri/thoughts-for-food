@@ -68,6 +68,7 @@ app
       Recipe.create(req.body, function (err, createdRecipe) {
         if (err) {
           console.log(err);
+          res.sendStatus("500");
         } else {
           console.log("added recipe from POST request", createdRecipe);
           res.status(201).send(createdRecipe._id);

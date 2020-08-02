@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
+import Alert from "react-bootstrap/Alert";
+
 import axios from "axios";
 
 class RecipeForm extends Component {
@@ -15,6 +17,8 @@ class RecipeForm extends Component {
       difficulty: "",
       ingredients: [{ amount: "", unit: "", name: "" }],
       method: [""],
+      responseStatus: "",
+      validated: false,
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -144,47 +148,49 @@ class RecipeForm extends Component {
       method,
     } = this.state;
     let self = this;
-
-    if (edit) {
-      axios({
-        method: "put",
-        url: `/recipes/${match.params.id}`,
-        data: {
-          name: name,
-          author: author,
-          description: description,
-          prepTime: prepTime,
-          difficulty: difficulty,
-          ingredients: ingredients,
-          method: method,
-        },
-      })
-        .then(function (response) {
-          history.push(`/Recipes/${match.params.id}`);
+    this.setState({ validated: true, responseStatus: "" });
+    if (e.currentTarget.checkValidity()) {
+      if (edit) {
+        axios({
+          method: "put",
+          url: `/recipes/${match.params.id}`,
+          data: {
+            name: name,
+            author: author,
+            description: description,
+            prepTime: prepTime,
+            difficulty: difficulty,
+            ingredients: ingredients,
+            method: method,
+          },
         })
-        .catch(function (error) {
-          console.log(error);
-        });
-    } else {
-      axios({
-        method: "post",
-        url: "/recipes",
-        data: {
-          name: name,
-          author: user,
-          description: description,
-          prepTime: prepTime,
-          difficulty: difficulty,
-          ingredients: ingredients,
-          method: method,
-        },
-      })
-        .then(function (response) {
-          history.push(`/Recipes/${response.data}`);
+          .then(function (response) {
+            history.push(`/Recipes/${match.params.id}`);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      } else {
+        axios({
+          method: "post",
+          url: "/recipes",
+          data: {
+            name: name,
+            author: user,
+            description: description,
+            prepTime: prepTime,
+            difficulty: difficulty,
+            ingredients: ingredients,
+            method: method,
+          },
         })
-        .catch(function (error) {
-          console.log(error);
-        });
+          .then(function (response) {
+            history.push(`/Recipes/${response.data}`);
+          })
+          .catch(function (error) {
+            self.setState({ responseStatus: error.response.status });
+          });
+      }
     }
   }
 
@@ -206,13 +212,18 @@ class RecipeForm extends Component {
           <Form.Group as={Col} controlId={`amount${idx}`}>
             <Form.Label>amount</Form.Label>
             <Form.Control
-              type="text"
+              type="number"
               placeholder="amount"
               value={ingredient.amount}
+              required
+              isInvalid={NaN}
               onChange={(e) => {
                 this.handleIngredientChange(e, idx);
               }}
             />
+            <Form.Control.Feedback type="invalid">
+              Amount must be a number
+            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group as={Col} controlId={`unit${idx}`}>
             <Form.Label>unit</Form.Label>
@@ -220,6 +231,7 @@ class RecipeForm extends Component {
               type="text"
               placeholder="unit"
               value={ingredient.unit}
+              required
               onChange={(e) => {
                 this.handleIngredientChange(e, idx);
               }}
@@ -230,7 +242,8 @@ class RecipeForm extends Component {
             <Form.Control
               type="text"
               placeholder="ingredientName"
-              value={ingredient.ingredient}
+              value={ingredient.name}
+              required
               onChange={(e) => {
                 this.handleIngredientChange(e, idx);
               }}
@@ -258,6 +271,7 @@ class RecipeForm extends Component {
             type="text"
             placeholder={`step${idx + 1}`}
             value={method}
+            required
             onChange={(e) => {
               this.handleMethodChange(e, idx);
             }}
@@ -287,8 +301,17 @@ class RecipeForm extends Component {
             border: "solid 0.1rem",
           }}
         >
+          {this.state.responseStatus === 500 && (
+            <Alert variant="danger">
+              Server cannot handle your request at the moment
+            </Alert>
+          )}
           <h2>Create your recipe</h2>
-          <Form onSubmit={this.handleSubmit}>
+          <Form
+            noValidate
+            validated={this.state.validated}
+            onSubmit={this.handleSubmit}
+          >
             <Form.Row>
               <Form.Group as={Col} controlId="name">
                 <Form.Label>Name</Form.Label>
@@ -297,17 +320,23 @@ class RecipeForm extends Component {
                   placeholder="Name"
                   value={name}
                   onChange={this.handleChange}
+                  required
                 />
               </Form.Group>
 
               <Form.Group as={Col} controlId="prepTime">
-                <Form.Label>Preparation time</Form.Label>
+                <Form.Label>Preparation time (Number in minutes)</Form.Label>
                 <Form.Control
-                  type="text"
+                  type="number"
                   placeholder="Preparation time"
                   value={prepTime}
                   onChange={this.handleChange}
+                  isInvalid={NaN}
+                  required
                 />
+                <Form.Control.Feedback type="invalid">
+                  prepTime should be a number in minutes
+                </Form.Control.Feedback>
               </Form.Group>
             </Form.Row>
 
@@ -319,16 +348,19 @@ class RecipeForm extends Component {
                 placeholder="Description"
                 value={description}
                 onChange={this.handleChange}
+                required
               />
             </Form.Group>
 
             <Form.Group controlId="difficulty">
               <Form.Label>difficulty</Form.Label>
               <Form.Control
-                type="text"
+                type="number"
                 placeholder="difficulty"
                 value={difficulty}
+                isInvalid={NaN}
                 onChange={this.handleChange}
+                required
               />
             </Form.Group>
             <h3>ingredients</h3>
@@ -341,10 +373,6 @@ class RecipeForm extends Component {
               Add step
             </Button>
             {methodForms}
-
-            <Form.Group id="formGridCheckbox">
-              <Form.Check type="checkbox" label="Check me out" />
-            </Form.Group>
 
             <Button variant="primary" type="submit">
               Submit
