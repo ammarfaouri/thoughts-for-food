@@ -13,7 +13,7 @@ class MiniRecipe extends Component {
           </Card.Title>
           <Card.Subtitle className="mb-2 text-muted">
             By
-            <Link to={`/Users/${author}`}>{author}</Link>
+            <Link to={`/Users/${author}`}> {author}</Link>
           </Card.Subtitle>
           <Card.Text>{description.substring(0, 100)}...</Card.Text>
         </Card.Body>

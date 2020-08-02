@@ -103,9 +103,12 @@ class App extends Component {
           />
           <Route
             exact
-            path="/Users/:id"
+            path="/Users/:username"
             render={(routeParams) => (
-              <Profile user={username} {...routeParams} />
+              <Profile
+                user={routeParams.match.params.username}
+                {...routeParams}
+              />
             )}
           />
           <Route exact path="/Recipes" render={() => <Recipes />} />
