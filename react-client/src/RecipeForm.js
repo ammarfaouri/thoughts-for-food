@@ -15,7 +15,7 @@ class RecipeForm extends Component {
       author: "",
       description: "",
       prepTime: "",
-      difficulty: "",
+      difficulty: "1",
       ingredients: [{ amount: "", unit: "", name: "" }],
       method: [""],
       responseStatus: "",
@@ -354,7 +354,10 @@ class RecipeForm extends Component {
                 </Form.Control.Feedback>
               </Form.Group>
             </Form.Row>
-
+            <Form.File id="formcheck-api-regular">
+              <Form.File.Label>recipe picture</Form.File.Label>
+              <Form.File.Input />
+            </Form.File>
             <Form.Group controlId="description">
               <Form.Label>description</Form.Label>
               <Form.Control
@@ -371,12 +374,19 @@ class RecipeForm extends Component {
               <Form.Label>difficulty</Form.Label>
               <Form.Control
                 type="number"
-                placeholder="difficulty"
+                as="select"
+                custom
                 value={difficulty}
                 isInvalid={NaN}
                 onChange={this.handleChange}
                 required
-              />
+              >
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </Form.Control>
             </Form.Group>
             <h3>ingredients</h3>
             <Button onClick={this.handleAddIngredient} variant="primary">
