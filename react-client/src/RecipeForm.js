@@ -30,6 +30,7 @@ class RecipeForm extends Component {
     this.handleMethodChange = this.handleMethodChange.bind(this);
     this.handleMethodDelete = this.handleMethodDelete.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleFileChange = this.handleFileChange.bind(this);
   }
 
   componentDidMount() {
@@ -63,6 +64,10 @@ class RecipeForm extends Component {
 
   handleChange(e) {
     this.setState({ [e.target.id]: e.target.value });
+  }
+
+  handleFileChange(e) {
+    console.log(e.target.files);
   }
 
   handleIngredientChange(e, idx) {
@@ -356,7 +361,7 @@ class RecipeForm extends Component {
             </Form.Row>
             <Form.File id="formcheck-api-regular">
               <Form.File.Label>recipe picture</Form.File.Label>
-              <Form.File.Input />
+              <Form.File.Input onChange={this.handleFileChange} />
             </Form.File>
             <Form.Group controlId="description">
               <Form.Label>description</Form.Label>
