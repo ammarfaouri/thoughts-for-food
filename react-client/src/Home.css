@@ -1,0 +1,15 @@
+body {
+  background-color: #d6e0f0;
+}
+
+.jumbotron {
+  background-color: #8d93ab;
+  height: 40%;
+  width: 40%;
+  margin: auto;
+  margin-top: 4rem;
+}
+
+.navbar {
+  background-color: #393b44;
+}

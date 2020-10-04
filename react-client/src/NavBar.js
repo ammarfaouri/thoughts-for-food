@@ -32,7 +32,7 @@ class NavBar extends Component {
     let { loggedIn, user } = this.props;
     return (
       <div className="NavBar">
-        <Navbar bg="dark" variant="dark">
+        <Navbar variant="dark">
           <Navbar.Brand>
             <Link to="/">T4F</Link>
           </Navbar.Brand>
