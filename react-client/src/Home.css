@@ -42,3 +42,14 @@ body {
   margin: 4rem auto;
   padding: 2rem 0;
 }
+.SignUpForm {
+  width: 50%;
+  margin: 4rem auto;
+  background-color: #8d93ab;
+  padding: 2rem 0;
+}
+.SignupInput {
+  width: 60%;
+  margin: 2rem auto;
+  padding: 2rem 0;
+}

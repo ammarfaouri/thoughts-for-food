@@ -74,7 +74,7 @@ class SignUpForm extends Component {
     } = this.state;
     if (!this.props.loggedIn) {
       return (
-        <div className="SignUpForm" style={{ width: "50%", margin: "auto" }}>
+        <div className="SignUpForm">
           {this.state.responseStatus === 500 && (
             <Alert variant="danger">
               Server cannot handle your request at the moment
@@ -82,7 +82,12 @@ class SignUpForm extends Component {
           )}
 
           <h2>Create your account!</h2>
-          <Form noValidate validated={validated} onSubmit={this.handleSubmit}>
+          <Form
+            className="SignupInput"
+            noValidate
+            validated={validated}
+            onSubmit={this.handleSubmit}
+          >
             <Form.Group controlId="firstName">
               <Form.Label>First Name</Form.Label>
               <Form.Control
