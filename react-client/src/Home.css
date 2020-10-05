@@ -30,3 +30,15 @@ body {
   width: 40%;
   margin: 2rem;
 }
+
+.LoginForm {
+  width: 50%;
+  margin: auto;
+  background-color: #8d93ab;
+}
+
+.LoginInput {
+  width: 60%;
+  margin: 4rem auto;
+  padding: 2rem 0;
+}
