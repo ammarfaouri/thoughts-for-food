@@ -74,3 +74,21 @@ body {
   margin-top: 4rem;
   padding: 2rem;
 }
+
+.RecipeForm {
+  background-color: #8d93ab;
+  height: 100%;
+  width: 60%;
+  margin: 4rem auto;
+  padding: 2rem;
+}
+
+.RecipeInput {
+  width: 70%;
+  margin: 2rem auto;
+}
+
+.delete-button {
+  height: 50%;
+  margin: auto;
+}

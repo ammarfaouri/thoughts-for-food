@@ -224,12 +224,12 @@ class RecipeForm extends Component {
     let ingredientForms = ingredients.map((ingredient, idx) => {
       return (
         <Form.Row>
-          <Form.Label>ingredient {idx + 1}</Form.Label>
+          <Form.Label>Ingredient {idx + 1}</Form.Label>
           <Form.Group as={Col} controlId={`amount${idx}`}>
-            <Form.Label>amount</Form.Label>
+            <Form.Label>Amount</Form.Label>
             <Form.Control
               type="number"
-              placeholder="amount"
+              placeholder="Amount"
               value={ingredient.amount}
               required
               isInvalid={NaN}
@@ -242,10 +242,10 @@ class RecipeForm extends Component {
             </Form.Control.Feedback>
           </Form.Group>
           <Form.Group as={Col} controlId={`unit${idx}`}>
-            <Form.Label>unit</Form.Label>
+            <Form.Label>Unit</Form.Label>
             <Form.Control
               type="text"
-              placeholder="unit"
+              placeholder="Unit"
               value={ingredient.unit}
               required
               onChange={(e) => {
@@ -254,10 +254,10 @@ class RecipeForm extends Component {
             />
           </Form.Group>
           <Form.Group as={Col} controlId={`name${idx}`}>
-            <Form.Label>ingredientName</Form.Label>
+            <Form.Label>Name</Form.Label>
             <Form.Control
               type="text"
-              placeholder="ingredientName"
+              placeholder="Name"
               value={ingredient.name}
               required
               onChange={(e) => {
@@ -267,6 +267,7 @@ class RecipeForm extends Component {
           </Form.Group>
           {idx ? (
             <Button
+              className="delete-button"
               variant="danger"
               onClick={(e) => this.handleIngredientDelete(e, idx)}
             >
@@ -285,7 +286,7 @@ class RecipeForm extends Component {
           <Form.Label>Step {idx + 1}</Form.Label>
           <Form.Control
             type="text"
-            placeholder={`step${idx + 1}`}
+            placeholder="Step"
             value={method}
             required
             onChange={(e) => {
@@ -308,15 +309,7 @@ class RecipeForm extends Component {
 
     if (this.props.loggedIn) {
       return (
-        <div
-          className="RecipeForm"
-          style={{
-            width: "50%",
-            margin: "auto",
-            marginTop: "5rem",
-            border: "solid 0.1rem",
-          }}
-        >
+        <div className="RecipeForm">
           {this.state.responseStatus === 500 && (
             <Alert variant="danger">
               Server cannot handle your request at the moment
@@ -328,6 +321,7 @@ class RecipeForm extends Component {
 
           <h2>Create your recipe</h2>
           <Form
+            className="RecipeInput"
             noValidate
             validated={this.state.validated}
             onSubmit={this.handleSubmit}
@@ -360,11 +354,16 @@ class RecipeForm extends Component {
               </Form.Group>
             </Form.Row>
             <Form.File id="formcheck-api-regular">
-              <Form.File.Label>recipe picture</Form.File.Label>
+              <Form.File.Label>
+                <img
+                  className="aboutimg"
+                  src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80"
+                />
+              </Form.File.Label>
               <Form.File.Input onChange={this.handleFileChange} />
             </Form.File>
             <Form.Group controlId="description">
-              <Form.Label>description</Form.Label>
+              <Form.Label>Description</Form.Label>
               <Form.Control
                 as="textarea"
                 rows="7"
@@ -376,7 +375,7 @@ class RecipeForm extends Component {
             </Form.Group>
 
             <Form.Group controlId="difficulty">
-              <Form.Label>difficulty</Form.Label>
+              <Form.Label>Difficulty</Form.Label>
               <Form.Control
                 type="number"
                 as="select"
@@ -393,12 +392,12 @@ class RecipeForm extends Component {
                 <option>5</option>
               </Form.Control>
             </Form.Group>
-            <h3>ingredients</h3>
+            <h3>Ingredients</h3>
             <Button onClick={this.handleAddIngredient} variant="primary">
               Add ingredient
             </Button>
             {ingredientForms}
-            <h3>method</h3>
+            <h3>Method</h3>
             <Button onClick={this.handleAddMethod} variant="primary">
               Add step
             </Button>
