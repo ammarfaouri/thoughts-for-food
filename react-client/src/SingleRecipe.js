@@ -4,6 +4,9 @@ import Modal from "react-bootstrap/Modal";
 import { Link } from "react-router-dom";
 import Alert from "react-bootstrap/Alert";
 import Spinner from "react-bootstrap/Spinner";
+import Card from "react-bootstrap/Card";
+import ListGroupItem from "react-bootstrap/ListGroupItem";
+import ListGroup from "react-bootstrap/ListGroup";
 
 import axios from "axios";
 
@@ -92,36 +95,51 @@ class SingleRecipe extends Component {
     } = this.state;
     let ingredientList = ingredients.map((ingredient) => {
       return (
-        <li>
-          {ingredient.amount},{ingredient.unit},{ingredient.name}
-        </li>
+        <ListGroup.Item>
+          {ingredient.amount} {ingredient.unit} {ingredient.name}
+        </ListGroup.Item>
       );
     });
     let methodList = method.map((step) => {
-      return <li>{step}</li>;
+      return <ListGroup.Item>{step}</ListGroup.Item>;
     });
 
     return (
       <div className="SingleRecipe">
-        <h3>{name}</h3>
-        <h3>{author}</h3>
-        <h3>{description}</h3>
-        <h3>{prepTime}</h3>
-        <h3>{difficulty}</h3>
-        <ul>{ingredientList}</ul>
-        <ui>{methodList}</ui>
+        <Card>
+          <Card.Img
+            className="RecipeImg"
+            variant="top"
+            src="https://images.unsplash.com/photo-1572455021453-7d0b208ae250?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1013&q=80"
+          />
+          <Card.Body>
+            <Card.Title>{name}</Card.Title>
+            <Card.Subtitle className="mb-2 text-muted">
+              By
+              <Link to={`/Users/${author}`}> {author}</Link>
+            </Card.Subtitle>
 
-        {editAndDelete ? (
-          <div className="buttons">
-            <Link to={`/Recipes/${this.props.match.params.id}/edit`}>
-              <Button variant="warning">Edit Recipe</Button>
-            </Link>
+            <Card.Text>{description}</Card.Text>
+            <Card.Text>Preparation time: {prepTime}</Card.Text>
+            <Card.Text>Difficulty : {difficulty}/5</Card.Text>
+            <Card.Text>Ingredients</Card.Text>
 
-            <Button onClick={this.toggleModal} variant="danger">
-              Delete Recipe
-            </Button>
-          </div>
-        ) : null}
+            <ListGroup horizontal>{ingredientList}</ListGroup>
+
+            <ListGroup variant="flush">{methodList}</ListGroup>
+            {editAndDelete ? (
+              <div className="buttons">
+                <Link to={`/Recipes/${this.props.match.params.id}/edit`}>
+                  <Button variant="warning">Edit Recipe</Button>
+                </Link>
+
+                <Button onClick={this.toggleModal} variant="danger">
+                  Delete Recipe
+                </Button>
+              </div>
+            ) : null}
+          </Card.Body>
+        </Card>
 
         <Modal show={showModal} onHide={this.toggleModal}>
           <Modal.Header closeButton>
