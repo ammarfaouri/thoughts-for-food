@@ -53,3 +53,24 @@ body {
   margin: 2rem auto;
   padding: 2rem 0;
 }
+
+.Recipes {
+  background-color: #8d93ab;
+  height: 100%;
+  width: 100%;
+  margin: 4rem auto;
+  padding: 2rem 2rem;
+}
+
+.MiniRecipe {
+  background-color: #393b44;
+  color: #d6e0f0;
+}
+
+.Profile {
+  background-color: #8d93ab;
+  height: 100%;
+  width: 100%;
+  margin-top: 4rem;
+  padding: 2rem;
+}

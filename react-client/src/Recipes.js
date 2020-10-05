@@ -26,6 +26,7 @@ class Recipes extends Component {
     ));
     return (
       <div className="Recipes">
+        <h2>Our Recipes:</h2>
         <CardDeck>{recipeList}</CardDeck>
       </div>
     );

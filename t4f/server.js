@@ -39,7 +39,7 @@ db.once("open", function () {
   console.log("Database is connected");
 });
 
-// //populate db with seed files
+//populate db with seed files
 // seedDB();
 
 app

@@ -42,13 +42,19 @@ class Profile extends Component {
     return (
       <div className="Profile">
         <div className="user-info">
-          <h3>{user}</h3>
-          <h3>{firstName}</h3>
-          <h3>{lastName}</h3>
-          <h3>{email}</h3>
+          <img
+            className="aboutimg"
+            src="https://previews.123rf.com/images/get4net/get4net1712/get4net171200024/91293920-user-profile.jpg"
+          />
+          <h3>
+            {firstName} {lastName}
+          </h3>
+          <h3></h3>
+          <h3>Email : {email}</h3>
         </div>
 
         <div className="user-recipes">
+          <h3>Created Recipes:</h3>
           <CardDeck>{recipeList}</CardDeck>
         </div>
       </div>

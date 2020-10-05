@@ -6,7 +6,7 @@ class MiniRecipe extends Component {
   render() {
     let { name, author, description, _id } = this.props.recipe;
     return (
-      <Card className="mt-5">
+      <Card className="MiniRecipe mt-5">
         <Card.Body>
           <Card.Title>
             <Link to={`/Recipes/${_id}`}>{name}</Link>

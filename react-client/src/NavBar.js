@@ -56,11 +56,8 @@ class NavBar extends Component {
 
           {loggedIn ? (
             <Nav className="ml-auto">
-              <Badge pill variant="info">
-                Signed in as {user}
-              </Badge>
               <Nav.Link>
-                <Link to={`/Users/${this.props.user}`}>Profile</Link>
+                <Link to={`/Users/${this.props.user}`}> {user}</Link>
               </Nav.Link>
               <Button onClick={this.handleSignOut} variant="warning">
                 Sign Out
