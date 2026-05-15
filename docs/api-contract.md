@@ -21,7 +21,8 @@ Some response shapes are deliberately legacy-compatible:
 - Recipes use `_id` instead of `id`.
 - Recipe authors are returned as username strings.
 - `POST /recipes` returns the created ID as plain text.
-- `GET /logged` returns the current username as plain text.
+- `GET /logged` returns the current username as plain text when called with a
+  Bearer access token.
 
 These are not the shapes I would choose for a brand-new API, but keeping them
 for now lets the backend change without forcing a full frontend rewrite in the
@@ -38,9 +39,28 @@ Most structured errors return:
 }
 ```
 
-Some legacy status-only responses still exist, mostly around auth/session
-compatibility. Those can be cleaned up once the frontend has a typed API client
-and better auth state handling.
+Some legacy status-only responses still exist. Those can be cleaned up once the
+frontend has a typed API client and better auth state handling.
+
+## Auth Contract
+
+The current auth contract uses:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/me`
+
+Login/register responses include a short-lived `accessToken` in JSON and set an
+HTTP-only `refreshToken` cookie. Protected routes use:
+
+```txt
+Authorization: Bearer <accessToken>
+```
+
+The refresh token is opaque, hashed before persistence, rotated on every
+refresh, and revoked on logout.
 
 ## Future v2 Contract
 
@@ -50,7 +70,8 @@ A cleaner future contract would likely change:
 - plain-text responses to JSON objects
 - username-only ownership references to richer user summaries
 - route casing from `/Recipes` frontend paths to lowercase API conventions only
-- auth endpoints to return explicit session/user objects
+- legacy auth aliases to be replaced by the explicit `/auth/*` contract
+- old legacy route aliases to be removed after the frontend migrates
 
 Example:
 

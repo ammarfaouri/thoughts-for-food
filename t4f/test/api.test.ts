@@ -1,11 +1,12 @@
-import session from "express-session";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { AuthService } from "../src/application/auth/AuthService";
+import { TokenService } from "../src/application/auth/TokenService";
 import { RecipeService } from "../src/application/recipes/RecipeService";
 import { UserProfileService } from "../src/application/users/UserProfileService";
 import {
+  InMemoryRefreshTokenRepository,
   InMemoryRecipeRepository,
   InMemoryUserRepository,
 } from "./support/inMemoryRepositories";
@@ -13,15 +14,14 @@ import {
 function createTestApp() {
   const users = new InMemoryUserRepository();
   const recipes = new InMemoryRecipeRepository(users);
+  const refreshTokens = new InMemoryRefreshTokenRepository(users);
 
   return createApp({
-    sessionStore: new session.MemoryStore(),
-    sessionSecret: "test-session-secret",
     enableLogger: false,
     enableRateLimit: false,
-    secureCookies: false,
     services: {
       authService: new AuthService(users),
+      tokenService: new TokenService(refreshTokens),
       recipeService: new RecipeService(recipes),
       userProfileService: new UserProfileService(users, recipes),
     },
@@ -45,6 +45,11 @@ const recipePayload = {
   ingredients: [{ amount: 500, unit: "g", name: "Flour" }],
   method: ["Mix dough", "Bake pizza"],
 };
+
+async function register(agent: request.SuperAgentTest, payload = userPayload) {
+  const response = await agent.post("/auth/register").send(payload).expect(201);
+  return response.body.accessToken as string;
+}
 
 describe("API", () => {
   it("exposes health and readiness routes", async () => {
@@ -73,12 +78,21 @@ describe("API", () => {
     });
   });
 
-  it("registers a user, stores the session, and hides profile email", async () => {
+  it("registers a user, returns an access token, and hides profile email", async () => {
     const agent = request.agent(createTestApp());
 
-    await agent.post("/users").send(userPayload).expect(201);
+    const accessToken = await register(agent);
 
-    const logged = await agent.get("/logged").expect(200);
+    const me = await agent
+      .get("/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    expect(me.body.user.username).toBe("ammar");
+
+    const logged = await agent
+      .get("/logged")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
     expect(logged.text).toBe("ammar");
 
     const profile = await agent.get("/users/ammar").expect(200);
@@ -94,11 +108,15 @@ describe("API", () => {
     await request(createTestApp()).post("/recipes").send(recipePayload).expect(401);
   });
 
-  it("creates and reads recipes using the authenticated user as author", async () => {
+  it("creates and reads recipes using the access token user as author", async () => {
     const agent = request.agent(createTestApp());
-    await agent.post("/users").send(userPayload).expect(201);
+    const accessToken = await register(agent);
 
-    const created = await agent.post("/recipes").send(recipePayload).expect(201);
+    const created = await agent
+      .post("/recipes")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(recipePayload)
+      .expect(201);
     const recipe = await agent.get(`/recipes/${created.text}`).expect(200);
 
     expect(recipe.body).toMatchObject({
@@ -116,21 +134,50 @@ describe("API", () => {
     const owner = request.agent(app);
     const otherUser = request.agent(app);
 
-    await owner.post("/users").send(userPayload).expect(201);
-    const created = await owner.post("/recipes").send(recipePayload).expect(201);
+    const ownerAccessToken = await register(owner);
+    const created = await owner
+      .post("/recipes")
+      .set("Authorization", `Bearer ${ownerAccessToken}`)
+      .send(recipePayload)
+      .expect(201);
 
-    await otherUser
-      .post("/users")
-      .send({
+    const otherAccessToken = await register(otherUser, {
         ...userPayload,
         username: "sara",
         email: "sara@example.com",
-      })
-      .expect(201);
+      });
 
     await otherUser
       .put(`/recipes/${created.text}`)
+      .set("Authorization", `Bearer ${otherAccessToken}`)
       .send({ ...recipePayload, name: "Stolen Pizza" })
       .expect(401);
+  });
+
+  it("rotates refresh tokens and rejects reused refresh tokens", async () => {
+    const app = createTestApp();
+    const agent = request.agent(app);
+
+    const registerResponse = await agent
+      .post("/auth/register")
+      .send(userPayload)
+      .expect(201);
+    const originalCookie = registerResponse.headers["set-cookie"][0];
+
+    const refreshResponse = await agent.post("/auth/refresh").expect(200);
+    expect(refreshResponse.body.accessToken).toBeTruthy();
+
+    await request(app)
+      .post("/auth/refresh")
+      .set("Cookie", originalCookie)
+      .expect(401);
+  });
+
+  it("revokes refresh tokens on logout", async () => {
+    const agent = request.agent(createTestApp());
+    await register(agent);
+
+    await agent.post("/auth/logout").expect(200);
+    await agent.post("/auth/refresh").expect(401);
   });
 });

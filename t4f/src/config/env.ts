@@ -10,7 +10,12 @@ const envSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   PORT: z.coerce.number().int().positive().default(5000),
-  SESSION_SECRET: z.string().min(16).default("development-session-secret"),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(16)
+    .default("development-access-token-secret"),
+  JWT_ACCESS_TTL: z.string().default("15m"),
+  JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 export const env = envSchema.parse(process.env);

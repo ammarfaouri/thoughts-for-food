@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { RecipeDraft } from "../../src/domain/recipe/Recipe";
 import { PrismaRecipeRepository } from "../../src/infrastructure/repositories/PrismaRecipeRepository";
+import { PrismaRefreshTokenRepository } from "../../src/infrastructure/repositories/PrismaRefreshTokenRepository";
 import { PrismaUserRepository } from "../../src/infrastructure/repositories/PrismaUserRepository";
 import {
   disconnectDatabase,
@@ -11,6 +12,7 @@ import {
 
 const users = new PrismaUserRepository(prismaTestClient);
 const recipes = new PrismaRecipeRepository(prismaTestClient);
+const refreshTokens = new PrismaRefreshTokenRepository(prismaTestClient);
 
 const userInput = {
   firstName: "Ammar",
@@ -145,5 +147,47 @@ describe("Prisma repositories", () => {
         where: { recipeId: created.id },
       }),
     ).resolves.toBe(0);
+  });
+
+  it("creates, revokes, and revokes refresh token families", async () => {
+    const author = await users.create(userInput);
+    const expiresAt = new Date(Date.now() + 60_000);
+
+    const first = await refreshTokens.create({
+      userId: author.id,
+      tokenHash: "first-token-hash",
+      familyId: "family-1",
+      expiresAt,
+    });
+    const second = await refreshTokens.create({
+      userId: author.id,
+      tokenHash: "second-token-hash",
+      familyId: "family-1",
+      expiresAt,
+    });
+
+    await expect(
+      refreshTokens.findByTokenHash("first-token-hash"),
+    ).resolves.toMatchObject({
+      id: first.id,
+      user: { id: author.id, username: "ammar" },
+    });
+
+    await refreshTokens.revoke(first.id, second.id);
+
+    await expect(
+      refreshTokens.findByTokenHash("first-token-hash"),
+    ).resolves.toMatchObject({
+      revokedAt: expect.any(Date),
+      replacedByTokenId: second.id,
+    });
+
+    await refreshTokens.revokeFamily("family-1");
+
+    await expect(
+      refreshTokens.findByTokenHash("second-token-hash"),
+    ).resolves.toMatchObject({
+      revokedAt: expect.any(Date),
+    });
   });
 });

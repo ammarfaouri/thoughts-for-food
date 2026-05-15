@@ -16,7 +16,7 @@ more production-oriented backend design.
 - PostgreSQL
 - Prisma
 - Zod request validation
-- Session authentication with PostgreSQL-backed sessions
+- JWT access tokens with rotating PostgreSQL-backed refresh tokens
 - bcrypt password hashing
 - Vitest unit tests
 - Docker Compose for local PostgreSQL
@@ -89,6 +89,28 @@ npm run build
 npm run dev
 ```
 
+## Continuous Integration
+
+GitHub Actions runs the backend and frontend quality gates on pushes to
+`master`/`main` and on pull requests.
+
+Backend CI:
+
+- installs dependencies with `npm ci`
+- generates the Prisma client
+- applies migrations to a PostgreSQL service
+- runs fast tests
+- runs database-backed repository tests
+- builds TypeScript
+- audits production dependencies
+
+Frontend CI:
+
+- installs dependencies with `npm ci`
+- runs the Vitest smoke test
+- builds the Vite app
+- audits production dependencies
+
 ## API Compatibility
 
 The backend still exposes the original routes:
@@ -100,12 +122,15 @@ The backend still exposes the original routes:
 - `DELETE /recipes/:id`
 - `POST /users`
 - `GET /users/:username`
-- `POST /login`
-- `GET /logged`
-- `GET /logout`
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /auth/me`
 
-Recipe responses still include `_id` and `author` fields so the current React
-components do not need to be rewritten immediately.
+Recipe responses still include `_id` and `author` fields for compatibility.
+Authentication has moved to `/auth/*` token endpoints, so the current React auth
+flow needs a follow-up update.
 
 ## Next Modernization Steps
 

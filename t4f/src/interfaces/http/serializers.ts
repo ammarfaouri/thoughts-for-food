@@ -1,4 +1,5 @@
 import { RecipeDetails, RecipeSummary } from "../../domain/recipe/Recipe";
+import { TokenPair } from "../../application/auth/TokenService";
 
 type UserProfileResponse = {
   firstName: string;
@@ -33,5 +34,12 @@ export function serializeUserProfile(profile: UserProfileResponse) {
     firstName: profile.firstName,
     lastName: profile.lastName,
     recipesInfo: profile.recipesInfo.map(serializeRecipeSummary),
+  };
+}
+
+export function serializeTokenPair(tokenPair: TokenPair) {
+  return {
+    accessToken: tokenPair.accessToken,
+    user: tokenPair.user,
   };
 }

@@ -5,6 +5,11 @@ import {
   RecipeSummary,
 } from "../../src/domain/recipe/Recipe";
 import { RecipeRepository } from "../../src/domain/recipe/RecipeRepository";
+import {
+  CreateRefreshTokenInput,
+  RefreshTokenRecord,
+} from "../../src/domain/auth/RefreshToken";
+import { RefreshTokenRepository } from "../../src/domain/auth/RefreshTokenRepository";
 import { RegisterUserInput, User } from "../../src/domain/user/User";
 import { UserRepository } from "../../src/domain/user/UserRepository";
 
@@ -36,6 +41,10 @@ export class InMemoryUserRepository implements UserRepository {
 
   usernameById(id: string) {
     return this.users.find((user) => user.id === id)?.username;
+  }
+
+  findStoredById(id: string) {
+    return this.users.find((user) => user.id === id);
   }
 }
 
@@ -88,5 +97,57 @@ export class InMemoryRecipeRepository implements RecipeRepository {
 
   async delete(id: string) {
     this.recipes = this.recipes.filter((recipe) => recipe.id !== id);
+  }
+}
+
+export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
+  private refreshTokens: RefreshTokenRecord[] = [];
+
+  constructor(private readonly users: InMemoryUserRepository) {}
+
+  create(input: CreateRefreshTokenInput) {
+    const user = this.users.findStoredById(input.userId);
+    if (!user) {
+      throw new Error(`User ${input.userId} does not exist`);
+    }
+
+    const refreshToken: RefreshTokenRecord = {
+      id: randomUUID(),
+      userId: input.userId,
+      tokenHash: input.tokenHash,
+      familyId: input.familyId,
+      expiresAt: input.expiresAt,
+      revokedAt: null,
+      replacedByTokenId: null,
+      createdAt: new Date(),
+      user: {
+        id: user.id,
+        username: user.username,
+      },
+    };
+    this.refreshTokens.push(refreshToken);
+    return Promise.resolve(refreshToken);
+  }
+
+  findByTokenHash(tokenHash: string) {
+    return Promise.resolve(
+      this.refreshTokens.find((token) => token.tokenHash === tokenHash) ?? null,
+    );
+  }
+
+  async revoke(id: string, replacedByTokenId?: string) {
+    this.refreshTokens = this.refreshTokens.map((token) =>
+      token.id === id
+        ? { ...token, revokedAt: new Date(), replacedByTokenId }
+        : token,
+    );
+  }
+
+  async revokeFamily(familyId: string) {
+    this.refreshTokens = this.refreshTokens.map((token) =>
+      token.familyId === familyId && !token.revokedAt
+        ? { ...token, revokedAt: new Date() }
+        : token,
+    );
   }
 }

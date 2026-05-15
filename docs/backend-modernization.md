@@ -17,7 +17,7 @@ The backend now uses:
 - PostgreSQL
 - Prisma
 - Zod validation
-- Session auth with PostgreSQL-backed session storage
+- JWT access tokens with rotating PostgreSQL-backed refresh tokens
 - Domain/application/infrastructure/http boundaries
 - Unit and HTTP integration tests
 
@@ -70,9 +70,23 @@ unit test and keeps business rules from depending on web/database details.
 The original app trusted `author` from the client request body when editing or
 deleting recipes. That is not safe because a client can send any author value.
 
-The modernized backend stores the authenticated user in the session and checks
-ownership server-side before updates/deletes. The frontend may still send an
-`author` field for compatibility, but the backend no longer trusts it.
+The modernized backend reads the authenticated user from a verified JWT access
+token and checks ownership server-side before updates/deletes. The frontend may
+still send an `author` field for compatibility, but the backend no longer trusts
+it.
+
+## Auth Model
+
+The API now uses:
+
+- Short-lived JWT access tokens returned in JSON.
+- Opaque refresh tokens stored in an HTTP-only cookie.
+- SHA-256 refresh token hashes stored in PostgreSQL.
+- Refresh token rotation on every `POST /auth/refresh`.
+- Refresh token family revocation when a revoked token is reused.
+
+This avoids storing raw refresh tokens in the database and avoids putting the
+long-lived credential in browser JavaScript.
 
 ## API Compatibility
 
@@ -113,12 +127,12 @@ npm run test:db
 - Structured `404` responses.
 - Centralized error handling.
 - Login rate limiting.
-- Secure session cookie defaults.
+- HTTP-only refresh token cookie defaults.
 - Hidden public profile email.
 
 ## Remaining Backend Work
 
-- Add CSRF protection or intentionally switch to token-based auth.
+- Update the frontend to use `/auth/*` token auth.
 - Add database-backed integration tests.
 - Add OpenAPI documentation.
 - Add CI pipeline.
