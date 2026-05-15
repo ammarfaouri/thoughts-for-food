@@ -93,11 +93,18 @@ Current tests cover two layers:
 - Unit tests for application services.
 - HTTP integration tests using Express, routes, middleware, and in-memory
   repositories.
+- Database-backed repository tests using Prisma against PostgreSQL.
 
-This gives fast confidence without requiring PostgreSQL for every test run.
+This keeps the fast suite quick while still proving that the real repository
+adapters, migrations, constraints, nested writes, and cascade behavior work
+against PostgreSQL.
 
-The next backend testing step is adding database-backed integration tests with a
-real PostgreSQL test database or Testcontainers.
+The database-backed suite is explicit:
+
+```bash
+cd t4f
+npm run test:db
+```
 
 ## Production Hardening Added
 

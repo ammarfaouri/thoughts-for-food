@@ -77,6 +77,7 @@ The API runs on `http://localhost:5000`.
 ```bash
 cd t4f
 npm test
+npm run test:db
 npm run build
 npm run prisma:generate
 ```
