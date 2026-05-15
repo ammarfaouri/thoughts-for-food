@@ -24,14 +24,15 @@ more production-oriented backend design.
 ### Frontend
 
 - React 16
-- Create React App
+- Vite
 - React Router v5
 - React Bootstrap
-- Axios
+- Axios 1.x
+- Vitest
 
-The frontend is still the original client. The backend keeps the old API
-contract so the current React app can continue to work while the backend is
-modernized first.
+The frontend is still largely the original React implementation, but the build
+tooling has been moved from Create React App to Vite so it runs cleanly on
+modern Node versions.
 
 ## Backend Architecture
 
@@ -49,6 +50,13 @@ t4f/src
 The important boundary is that application services depend on repository
 interfaces, not directly on Express or Prisma. Express and Prisma are adapters
 around the core use cases.
+
+More detailed backend reasoning is documented in
+[docs/backend-modernization.md](docs/backend-modernization.md).
+
+The current API contract and legacy compatibility choices are documented in
+[docs/api-contract.md](docs/api-contract.md). The live OpenAPI document is
+available from the backend at `GET /openapi.json`.
 
 ## Running the Backend
 
@@ -73,6 +81,13 @@ npm run build
 npm run prisma:generate
 ```
 
+```bash
+cd react-client
+npm test
+npm run build
+npm run dev
+```
+
 ## API Compatibility
 
 The backend still exposes the original routes:
@@ -93,8 +108,8 @@ components do not need to be rewritten immediately.
 
 ## Next Modernization Steps
 
-- Convert the React app to Vite + React + TypeScript.
 - Replace class components with function components.
+- Convert the React app to TypeScript.
 - Add TanStack Query for server state.
 - Add React Hook Form + Zod for forms.
 - Add image upload support for recipes.
