@@ -1,6 +1,11 @@
-start:
-	sudo docker-compose up -d
-	nodemon server.js
+start-db:
+	docker compose up -d
 
-stop:
-	sudo docker-compose stop
+stop-db:
+	docker compose stop
+
+dev:
+	npm run dev
+
+test:
+	npm test

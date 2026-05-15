@@ -1,6 +1,20 @@
-version: '3.7'
 services:
-  mongodb_container:
-    image: mongo:4.2.1
+  postgres:
+    image: postgres:16-alpine
+    container_name: thoughts_for_food_postgres
+    environment:
+      POSTGRES_USER: t4f
+      POSTGRES_PASSWORD: t4f
+      POSTGRES_DB: t4f
     ports:
-      - 27017:27017
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U t4f -d t4f"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
