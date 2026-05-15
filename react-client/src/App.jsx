@@ -13,7 +13,7 @@ import Profile from "./Profile";
 import Home from "./Home";
 import "./App.css";
 import "./Home.css";
-import { getLoggedUser } from "./api/client";
+import { clearAccessToken, refreshAuth } from "./api/client";
 
 class App extends Component {
   constructor(props) {
@@ -21,6 +21,7 @@ class App extends Component {
     this.state = {
       loggedIn: false,
       username: "",
+      authReady: false,
     };
     this.toggleLogin = this.toggleLogin.bind(this);
   }
@@ -30,13 +31,17 @@ class App extends Component {
 
   componentDidMount() {
     let self = this;
-    getLoggedUser()
+    refreshAuth()
       .then((response) =>
-        self.setState({ username: response.data, loggedIn: true })
+        self.setState({
+          username: response.data.user.username,
+          loggedIn: true,
+          authReady: true,
+        })
       )
       .catch(function (error) {
-        // handle error
-        console.log(error);
+        clearAccessToken();
+        self.setState({ loggedIn: false, username: "", authReady: true });
       });
   }
 

@@ -34,6 +34,15 @@ const pizzaDraft: RecipeDraft = {
   method: ["Mix dough", "Proof dough", "Bake pizza"],
 };
 
+const stewDraft: RecipeDraft = {
+  name: "Slow Stew",
+  description: "Long cooked dinner",
+  prepTime: 120,
+  difficulty: 5,
+  ingredients: [{ amount: 2, unit: "cups", name: "Stock" }],
+  method: ["Simmer slowly"],
+};
+
 describe("Prisma repositories", () => {
   beforeEach(async () => {
     await resetDatabase();
@@ -128,6 +137,43 @@ describe("Prisma repositories", () => {
         description: "Simple pizza",
       },
     ]);
+  });
+
+  it("filters recipes by search, difficulty, prep time, author, and pagination", async () => {
+    const ammar = await users.create(userInput);
+    const sara = await users.create({
+      ...userInput,
+      username: "sara",
+      email: "sara@example.com",
+    });
+
+    const pizza = await recipes.create(ammar.id, pizzaDraft);
+    await recipes.create(ammar.id, stewDraft);
+    await recipes.create(sara.id, {
+      ...pizzaDraft,
+      name: "Sara Salad",
+      description: "Fast fresh lunch",
+      prepTime: 15,
+      difficulty: 1,
+    });
+
+    await expect(
+      recipes.findAll({
+        search: "pizza",
+        difficulty: 3,
+        maxPrepTime: 60,
+        author: "ammar",
+        limit: 20,
+        offset: 0,
+      }),
+    ).resolves.toEqual([pizza]);
+
+    await expect(
+      recipes.findAll({
+        limit: 1,
+        offset: 1,
+      }),
+    ).resolves.toHaveLength(1);
   });
 
   it("cascades recipe children when deleting a recipe", async () => {

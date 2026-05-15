@@ -16,6 +16,7 @@ export type RecipeDetails = RecipeSummary & {
   difficulty: number;
   ingredients: Ingredient[];
   method: string[];
+  tags: string[];
 };
 
 export type RecipeDraft = {
@@ -25,4 +26,15 @@ export type RecipeDraft = {
   difficulty: number;
   ingredients: Ingredient[];
   method: string[];
+  tags?: string[];
+};
+
+export type RecipeSearchCriteria = {
+  search?: string;
+  difficulty?: number;
+  maxPrepTime?: number;
+  author?: string;
+  tag?: string;
+  limit: number;
+  offset: number;
 };

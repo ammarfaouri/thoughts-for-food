@@ -38,7 +38,10 @@ class LoginForm extends Component {
         .then(function (response) {
           if (response.status === 200) {
             self.setState({ loggedIn: true });
-            self.props.login({ loggedIn: true, username: self.state.username });
+            self.props.login({
+              loggedIn: true,
+              username: response.data.user.username,
+            });
             history.push("/");
           }
         })

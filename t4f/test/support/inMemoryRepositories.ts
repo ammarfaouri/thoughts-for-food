@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   RecipeDetails,
   RecipeDraft,
+  RecipeSearchCriteria,
   RecipeSummary,
 } from "../../src/domain/recipe/Recipe";
 import { RecipeRepository } from "../../src/domain/recipe/RecipeRepository";
@@ -53,8 +54,31 @@ export class InMemoryRecipeRepository implements RecipeRepository {
 
   constructor(private readonly users: InMemoryUserRepository) {}
 
-  findAll() {
-    return Promise.resolve(this.recipes);
+  findAll(criteria: RecipeSearchCriteria) {
+    const filtered = this.recipes.filter((recipe) => {
+      const matchesSearch = criteria.search
+        ? `${recipe.name} ${recipe.description}`
+            .toLowerCase()
+            .includes(criteria.search.toLowerCase())
+        : true;
+      const matchesDifficulty = criteria.difficulty
+        ? recipe.difficulty === criteria.difficulty
+        : true;
+      const matchesPrepTime = criteria.maxPrepTime
+        ? recipe.prepTime <= criteria.maxPrepTime
+        : true;
+      const matchesAuthor = criteria.author
+        ? recipe.author === criteria.author
+        : true;
+
+      return (
+        matchesSearch && matchesDifficulty && matchesPrepTime && matchesAuthor
+      );
+    });
+
+    return Promise.resolve(
+      filtered.slice(criteria.offset, criteria.offset + criteria.limit),
+    );
   }
 
   findById(id: string) {

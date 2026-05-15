@@ -13,10 +13,8 @@ class NavBar extends Component {
   }
 
   handleSignOut() {
-    //destroy session
     let self = this;
     logout()
-      //setstate in parent component
       .then((response) => {
         self.props.login({ loggedIn: false, username: "" });
         this.props.history.push("/");

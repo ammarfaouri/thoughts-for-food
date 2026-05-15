@@ -1,12 +1,12 @@
-import { RecipeDraft } from "../../domain/recipe/Recipe";
+import { RecipeDraft, RecipeSearchCriteria } from "../../domain/recipe/Recipe";
 import { RecipeRepository } from "../../domain/recipe/RecipeRepository";
 import { AppError } from "../../shared/AppError";
 
 export class RecipeService {
   constructor(private readonly recipes: RecipeRepository) {}
 
-  findAll() {
-    return this.recipes.findAll();
+  findAll(criteria: RecipeSearchCriteria) {
+    return this.recipes.findAll(criteria);
   }
 
   async findById(id: string) {

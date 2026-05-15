@@ -62,6 +62,25 @@ Authorization: Bearer <accessToken>
 The refresh token is opaque, hashed before persistence, rotated on every
 refresh, and revoked on logout.
 
+## Recipe Search Contract
+
+`GET /recipes` supports optional query params:
+
+```txt
+search       case-insensitive match on name or description
+difficulty   exact 1-5 difficulty match
+maxPrepTime  recipes at or below this prep time in minutes
+author       exact author username
+limit        page size, default 20, max 50
+offset       pagination offset, default 0
+```
+
+Example:
+
+```txt
+GET /recipes?search=pizza&difficulty=3&maxPrepTime=60&limit=10&offset=0
+```
+
 ## Future v2 Contract
 
 A cleaner future contract would likely change:

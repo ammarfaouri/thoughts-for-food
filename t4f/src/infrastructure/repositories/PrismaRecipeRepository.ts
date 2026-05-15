@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import {
   RecipeDetails,
   RecipeDraft,
+  RecipeSearchCriteria,
   RecipeSummary,
 } from "../../domain/recipe/Recipe";
 import { RecipeRepository } from "../../domain/recipe/RecipeRepository";
@@ -17,10 +18,13 @@ type RecipeRecord = Prisma.RecipeGetPayload<{ include: typeof recipeInclude }>;
 export class PrismaRecipeRepository implements RecipeRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async findAll(): Promise<RecipeDetails[]> {
+  async findAll(criteria: RecipeSearchCriteria): Promise<RecipeDetails[]> {
     const recipes = await this.prisma.recipe.findMany({
+      where: toRecipeWhere(criteria),
       include: recipeInclude,
       orderBy: { createdAt: "desc" },
+      take: criteria.limit,
+      skip: criteria.offset,
     });
     return recipes.map(toRecipeDetails);
   }
@@ -104,6 +108,26 @@ export class PrismaRecipeRepository implements RecipeRepository {
   async delete(id: string): Promise<void> {
     await this.prisma.recipe.delete({ where: { id } });
   }
+}
+
+function toRecipeWhere(criteria: RecipeSearchCriteria): Prisma.RecipeWhereInput {
+  return {
+    ...(criteria.search
+      ? {
+          OR: [
+            { name: { contains: criteria.search, mode: "insensitive" } },
+            { description: { contains: criteria.search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(criteria.difficulty ? { difficulty: criteria.difficulty } : {}),
+    ...(criteria.maxPrepTime
+      ? { prepTime: { lte: criteria.maxPrepTime } }
+      : {}),
+    ...(criteria.author
+      ? { author: { username: { equals: criteria.author } } }
+      : {}),
+  };
 }
 
 function toRecipeSummary(recipe: RecipeRecord): RecipeSummary {

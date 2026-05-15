@@ -46,11 +46,29 @@ model Recipe {
   author      User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   ingredients RecipeIngredient[]
   steps       RecipeStep[]
+  tags        RecipeTag[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
   @@index([authorId])
   @@index([name])
+}
+
+model Tag {
+  id        String      @id @default(uuid())
+  name      String      @unique
+  recipes   RecipeTag[]
+  createdAt DateTime    @default(now())
+}
+
+model RecipeTag {
+  recipeId String
+  tagId    String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, tagId])
+  @@index([tagId])
 }
 
 model RecipeIngredient {

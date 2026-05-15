@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   RecipeDetails,
   RecipeDraft,
+  RecipeSearchCriteria,
   RecipeSummary,
 } from "../src/domain/recipe/Recipe";
 import { RecipeRepository } from "../src/domain/recipe/RecipeRepository";
@@ -10,7 +11,10 @@ import { RecipeService } from "../src/application/recipes/RecipeService";
 class InMemoryRecipeRepository implements RecipeRepository {
   recipes: RecipeDetails[] = [];
 
-  findAll() {
+  lastCriteria?: RecipeSearchCriteria;
+
+  findAll(criteria: RecipeSearchCriteria) {
+    this.lastCriteria = criteria;
     return Promise.resolve(this.recipes);
   }
 
@@ -62,6 +66,29 @@ const draft: RecipeDraft = {
 };
 
 describe("RecipeService", () => {
+  it("passes search criteria to the repository", async () => {
+    const repository = new InMemoryRecipeRepository();
+    const service = new RecipeService(repository);
+
+    await service.findAll({
+      search: "pizza",
+      difficulty: 3,
+      maxPrepTime: 45,
+      author: "ammar",
+      limit: 10,
+      offset: 5,
+    });
+
+    expect(repository.lastCriteria).toEqual({
+      search: "pizza",
+      difficulty: 3,
+      maxPrepTime: 45,
+      author: "ammar",
+      limit: 10,
+      offset: 5,
+    });
+  });
+
   it("allows the author to update a recipe", async () => {
     const repository = new InMemoryRecipeRepository();
     repository.recipes.push({ id: "recipe-1", author: "ammar", ...draft });

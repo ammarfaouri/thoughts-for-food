@@ -4,9 +4,11 @@ import { asyncHandler } from "../asyncHandler";
 import { createAccessTokenAuthenticator } from "../middleware/authenticateAccessToken";
 import { requireAuth } from "../middleware/requireAuth";
 import { validateBody } from "../middleware/validateBody";
-import { recipeDraftSchema } from "../schemas";
+import { validateQuery } from "../middleware/validateQuery";
+import { recipeDraftSchema, recipeSearchQuerySchema } from "../schemas";
 import { serializeRecipe } from "../serializers";
 import { TokenService } from "../../../application/auth/TokenService";
+import { RecipeSearchCriteria } from "../../../domain/recipe/Recipe";
 
 export function createRecipeRoutes(
   recipeService: RecipeService,
@@ -18,8 +20,11 @@ export function createRecipeRoutes(
   router
     .route("/recipes")
     .get(
-      asyncHandler(async (_req, res) => {
-        const recipes = await recipeService.findAll();
+      validateQuery(recipeSearchQuerySchema),
+      asyncHandler(async (req, res) => {
+        const recipes = await recipeService.findAll(
+          req.query as unknown as RecipeSearchCriteria,
+        );
         res.json(recipes.map(serializeRecipe));
       }),
     )

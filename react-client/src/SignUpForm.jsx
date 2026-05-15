@@ -45,7 +45,10 @@ class SignUpForm extends Component {
         .then(function (response) {
           if (response.status === 201) {
             self.setState({ loggedIn: true, responseStatus: "201" });
-            self.props.login({ loggedIn: true, username: self.state.username });
+            self.props.login({
+              loggedIn: true,
+              username: response.data.user.username,
+            });
             history.push(`/Users/${username}`);
           }
         })

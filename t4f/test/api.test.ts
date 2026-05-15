@@ -129,6 +129,46 @@ describe("API", () => {
     });
   });
 
+  it("filters recipe lists by query params", async () => {
+    const agent = request.agent(createTestApp());
+    const accessToken = await register(agent);
+
+    await agent
+      .post("/recipes")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(recipePayload)
+      .expect(201);
+    await agent
+      .post("/recipes")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        ...recipePayload,
+        name: "Slow Stew",
+        description: "Long cooked dinner",
+        prepTime: 120,
+        difficulty: 5,
+      })
+      .expect(201);
+
+    const response = await agent
+      .get("/recipes")
+      .query({ search: "pizza", difficulty: 3, maxPrepTime: 60 })
+      .expect(200);
+
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({
+      name: "Pizza",
+      author: "ammar",
+    });
+  });
+
+  it("rejects invalid recipe list query params", async () => {
+    await request(createTestApp())
+      .get("/recipes")
+      .query({ difficulty: 10 })
+      .expect(400);
+  });
+
   it("rejects recipe updates from non-owners", async () => {
     const app = createTestApp();
     const owner = request.agent(app);

@@ -17,6 +17,7 @@ export function serializeRecipe(recipe: RecipeDetails) {
     difficulty: recipe.difficulty,
     ingredients: recipe.ingredients,
     method: recipe.method,
+    tags: recipe.tags,
   };
 }
 

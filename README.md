@@ -116,6 +116,7 @@ Frontend CI:
 The backend still exposes the original routes:
 
 - `GET /recipes`
+- `GET /recipes?search=&difficulty=&maxPrepTime=&author=&limit=&offset=`
 - `POST /recipes`
 - `GET /recipes/:id`
 - `PUT /recipes/:id`

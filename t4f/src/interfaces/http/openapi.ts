@@ -283,6 +283,40 @@ export const openApiDocument = {
       get: {
         tags: ["Recipes"],
         summary: "List recipes",
+        parameters: [
+          {
+            name: "search",
+            in: "query",
+            schema: { type: "string", minLength: 1, maxLength: 120 },
+            description: "Case-insensitive search over recipe name and description",
+          },
+          {
+            name: "difficulty",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 5 },
+          },
+          {
+            name: "maxPrepTime",
+            in: "query",
+            schema: { type: "integer", minimum: 1 },
+            description: "Maximum preparation time in minutes",
+          },
+          {
+            name: "author",
+            in: "query",
+            schema: { type: "string", minLength: 1, maxLength: 32 },
+          },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 50, default: 20 },
+          },
+          {
+            name: "offset",
+            in: "query",
+            schema: { type: "integer", minimum: 0, default: 0 },
+          },
+        ],
         responses: {
           "200": {
             description: "Recipe list",
