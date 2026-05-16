@@ -1,7 +1,8 @@
 # API Contract Notes
 
-The current API intentionally preserves the original frontend contract while the
-backend internals are being modernized.
+The backend now exposes one clean product API under `/api`. Legacy routes were
+removed because the app is not in production and does not need backward
+compatibility yet.
 
 ## Contract Source
 
@@ -11,30 +12,53 @@ The backend exposes its OpenAPI document at:
 GET /openapi.json
 ```
 
-This keeps the contract close to the code and makes it easy to wire into
-Swagger UI, Redoc, CI validation, or generated clients later.
+System endpoints stay unversioned:
 
-## Compatibility Decisions
+```txt
+GET /health
+GET /ready
+GET /metrics
+GET /openapi.json
+```
 
-Some response shapes are deliberately legacy-compatible:
+Product endpoints live under `/api`:
 
-- Recipes use `_id` instead of `id`.
-- Recipe authors are returned as username strings.
-- `POST /recipes` returns the created ID as plain text.
-- `GET /logged` returns the current username as plain text when called with a
-  Bearer access token.
+```txt
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/me
 
-These are not the shapes I would choose for a brand-new API, but keeping them
-for now lets the backend change without forcing a full frontend rewrite in the
-same step.
+GET    /api/recipes
+POST   /api/recipes
+GET    /api/recipes/:id
+PUT    /api/recipes/:id
+DELETE /api/recipes/:id
 
-Clean `/api/v1/*` routes now exist beside the legacy routes. Those routes use
-JSON response envelopes and `id` fields instead of `_id`, which gives the
-frontend a migration target without breaking the current UI.
+GET /api/users/:username
+```
 
-## Current Error Shape
+## Response Shape
 
-Most structured errors return:
+Successful API responses use a `data` envelope:
+
+```json
+{
+  "data": {
+    "id": "recipe-id",
+    "name": "Pizza"
+  }
+}
+```
+
+The API uses `id`, not Mongo-style `_id`.
+
+Deletes and logout return `204 No Content`.
+
+## Error Shape
+
+Structured errors return:
 
 ```json
 {
@@ -46,21 +70,9 @@ Most structured errors return:
 
 Validation errors may also include a `details` array with field-level messages.
 Every response includes an `x-request-id` header. Clients may provide their own
-`x-request-id`; otherwise the API generates one. This makes logs, support
-reports, and failed requests easier to correlate.
-
-Some legacy status-only responses still exist. Those can be cleaned up once the
-frontend has a typed API client and better auth state handling.
+`x-request-id`; otherwise the API generates one.
 
 ## Auth Contract
-
-The current auth contract uses:
-
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `GET /auth/me`
 
 Login/register responses include a short-lived `accessToken` in JSON and set an
 HTTP-only `refreshToken` cookie. Protected routes use:
@@ -74,7 +86,7 @@ refresh, and revoked on logout.
 
 ## Recipe Search Contract
 
-`GET /recipes` supports optional query params:
+`GET /api/recipes` supports optional query params:
 
 ```txt
 search       case-insensitive match on name or description
@@ -89,61 +101,10 @@ offset       pagination offset, default 0
 Example:
 
 ```txt
-GET /recipes?search=pizza&difficulty=3&maxPrepTime=60&tag=italian&limit=10&offset=0
+GET /api/recipes?search=pizza&difficulty=3&maxPrepTime=60&tag=italian&limit=10&offset=0
 ```
 
-The same search params are available on:
+## Frontend Migration Note
 
-```txt
-GET /api/v1/recipes
-```
-
-The v1 route returns:
-
-```json
-{
-  "data": [
-    {
-      "id": "recipe-id",
-      "name": "Pizza",
-      "author": "ammar"
-    }
-  ]
-}
-```
-
-## Future v2 Contract
-
-A cleaner future contract would likely change:
-
-- remove legacy `_id` routes once the frontend has moved to `/api/v1`
-- remove plain-text legacy responses once the frontend no longer uses them
-- username-only ownership references to richer user summaries
-- route casing from `/Recipes` frontend paths to lowercase API conventions only
-- legacy auth aliases to be replaced by the explicit `/auth/*` contract
-- old legacy route aliases to be removed after the frontend migrates
-
-Example:
-
-```json
-{
-  "id": "recipe-id",
-  "name": "Pizza",
-  "author": {
-    "id": "user-id",
-    "username": "ammar"
-  }
-}
-```
-
-## Senior-Level Migration Strategy
-
-The important choice is sequencing. Backend internals were modernized first,
-while the external contract stayed stable. That reduces blast radius and makes
-each modernization step reviewable:
-
-1. Improve internals.
-2. Document the current contract.
-3. Add tests around that contract.
-4. Migrate the frontend.
-5. Introduce a cleaner API contract deliberately.
+The current frontend may still reference old route names and `_id`. The next
+frontend step is to update it to consume `/api/*` and `id`.

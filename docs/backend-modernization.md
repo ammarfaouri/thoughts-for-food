@@ -82,23 +82,21 @@ The API now uses:
 - Short-lived JWT access tokens returned in JSON.
 - Opaque refresh tokens stored in an HTTP-only cookie.
 - SHA-256 refresh token hashes stored in PostgreSQL.
-- Refresh token rotation on every `POST /auth/refresh`.
+- Refresh token rotation on every `POST /api/auth/refresh`.
 - Refresh token family revocation when a revoked token is reused.
 
 This avoids storing raw refresh tokens in the database and avoids putting the
 long-lived credential in browser JavaScript.
 
-## API Compatibility
+## API Contract
 
-The current frontend still expects Mongo-style `_id` fields and plain `author`
-usernames. The backend keeps that API shape through serializers while using
-PostgreSQL IDs and relations internally.
+The original app exposed Mongo-style `_id` fields and legacy route aliases such
+as `/login`, `/logged`, and `/recipes`. Because this project is not in
+production, the backend now exposes only a clean `/api/*` contract with `id`
+fields and JSON `data` envelopes.
 
-That is an intentional migration strategy:
-
-1. Modernize internals.
-2. Preserve existing external behavior.
-3. Migrate frontend/API contract later when there is time.
+That means the frontend must migrate to the new contract next, but the backend
+is easier to explain and maintain.
 
 ## Testing Strategy
 
@@ -133,8 +131,8 @@ npm run test:db
 - CI pipeline for backend and frontend checks.
 - Database-backed repository tests.
 - Search/filtering with tag support.
-- Clean `/api/v1/*` routes exist beside legacy routes for future frontend
-  migration.
+- Product API routes now live under `/api/*`; legacy route aliases were removed
+  because the app does not need production backward compatibility yet.
 - Request IDs are returned in `x-request-id`, included in error responses, and
   attached to HTTP logs.
 - Environment configuration is validated at startup, with production checks for
@@ -154,13 +152,13 @@ work is optional product/deployment work rather than modernization foundation:
 - Add favorites if the app needs a small user-specific product feature.
 - Add file/image upload flow if recipe photos become part of the core UX.
 - Add deployment configuration when choosing a real hosting target.
-- Remove legacy response shapes only after the frontend is ready for a v2 API.
+- Migrate the frontend to `/api/*`.
 
 ## Senior-Level Framing
 
 The main decision was to avoid a rewrite-for-rewrite's-sake. The backend was
-modernized behind the existing API contract first. That reduced risk and gave a
-stable path for the frontend to continue working.
+modernized first, then the API contract was cleaned once it was clear that
+production backward compatibility was not needed.
 
 The shape is intentionally boring:
 

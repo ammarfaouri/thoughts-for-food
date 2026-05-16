@@ -14,12 +14,12 @@ export class UserProfileService {
       throw new AppError(404, "User not found", "USER_NOT_FOUND");
     }
 
-    const recipesInfo = await this.recipes.findSummariesByAuthorUsername(username);
+    const recipes = await this.recipes.findSummariesByAuthorUsername(username);
 
     return {
       firstName: user.firstName,
       lastName: user.lastName,
-      recipesInfo,
+      recipes,
     };
   }
 }

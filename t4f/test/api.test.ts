@@ -48,8 +48,8 @@ const recipePayload = {
 };
 
 async function register(agent: request.SuperAgentTest, payload = userPayload) {
-  const response = await agent.post("/auth/register").send(payload).expect(201);
-  return response.body.accessToken as string;
+  const response = await agent.post("/api/auth/register").send(payload).expect(201);
+  return response.body.data.accessToken as string;
 }
 
 describe("API", () => {
@@ -68,7 +68,7 @@ describe("API", () => {
     const response = await request(createTestApp()).get("/openapi.json").expect(200);
 
     expect(response.body.info.title).toBe("Thoughts for Food API");
-    expect(response.body.paths).toHaveProperty("/recipes");
+    expect(response.body.paths).toHaveProperty("/api/recipes");
     expect(response.body.components.schemas).toHaveProperty("Recipe");
   });
 
@@ -103,28 +103,22 @@ describe("API", () => {
     const accessToken = await register(agent);
 
     const me = await agent
-      .get("/auth/me")
+      .get("/api/auth/me")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
-    expect(me.body.user.username).toBe("ammar");
+    expect(me.body.data.user.username).toBe("ammar");
 
-    const logged = await agent
-      .get("/logged")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .expect(200);
-    expect(logged.text).toBe("ammar");
-
-    const profile = await agent.get("/users/ammar").expect(200);
-    expect(profile.body).toMatchObject({
+    const profile = await agent.get("/api/users/ammar").expect(200);
+    expect(profile.body.data).toMatchObject({
       firstName: "Ammar",
       lastName: "Faouri",
-      recipesInfo: [],
+      recipes: [],
     });
-    expect(profile.body.email).toBeUndefined();
+    expect(profile.body.data.email).toBeUndefined();
   });
 
   it("requires authentication before creating recipes", async () => {
-    await request(createTestApp()).post("/recipes").send(recipePayload).expect(401);
+    await request(createTestApp()).post("/api/recipes").send(recipePayload).expect(401);
   });
 
   it("creates and reads recipes using the access token user as author", async () => {
@@ -132,14 +126,14 @@ describe("API", () => {
     const accessToken = await register(agent);
 
     const created = await agent
-      .post("/recipes")
+      .post("/api/recipes")
       .set("Authorization", `Bearer ${accessToken}`)
       .send(recipePayload)
       .expect(201);
-    const recipe = await agent.get(`/recipes/${created.text}`).expect(200);
+    const recipe = await agent.get(`/api/recipes/${created.body.data.id}`).expect(200);
 
-    expect(recipe.body).toMatchObject({
-      _id: created.text,
+    expect(recipe.body.data).toMatchObject({
+      id: created.body.data.id,
       name: "Pizza",
       author: "ammar",
       description: "Simple pizza",
@@ -149,18 +143,18 @@ describe("API", () => {
     });
   });
 
-  it("exposes clean v1 JSON recipe responses alongside legacy routes", async () => {
+  it("updates and deletes recipes through the clean API", async () => {
     const agent = request.agent(createTestApp());
 
     const registerResponse = await agent
-      .post("/api/v1/auth/register")
+      .post("/api/auth/register")
       .send(userPayload)
       .expect(201);
 
     const accessToken = registerResponse.body.data.accessToken as string;
 
     const created = await agent
-      .post("/api/v1/recipes")
+      .post("/api/recipes")
       .set("Authorization", `Bearer ${accessToken}`)
       .send(recipePayload)
       .expect(201);
@@ -173,7 +167,7 @@ describe("API", () => {
     });
     expect(created.body.data._id).toBeUndefined();
 
-    const recipe = await agent.get(`/api/v1/recipes/${created.body.data.id}`).expect(200);
+    const recipe = await agent.get(`/api/recipes/${created.body.data.id}`).expect(200);
 
     expect(recipe.body.data).toMatchObject({
       id: created.body.data.id,
@@ -182,7 +176,7 @@ describe("API", () => {
     });
 
     const updated = await agent
-      .put(`/api/v1/recipes/${created.body.data.id}`)
+      .put(`/api/recipes/${created.body.data.id}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({ ...recipePayload, name: "Updated Pizza" })
       .expect(200);
@@ -190,9 +184,24 @@ describe("API", () => {
     expect(updated.body.data.name).toBe("Updated Pizza");
 
     await agent
-      .delete(`/api/v1/recipes/${created.body.data.id}`)
+      .delete(`/api/recipes/${created.body.data.id}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(204);
+  });
+
+  it("does not expose legacy product routes", async () => {
+    const app = createTestApp();
+
+    await request(app).get("/recipes").expect(404);
+    await request(app)
+      .post("/login")
+      .send({ username: "ammar", password: "password123" })
+      .expect(404);
+    await request(app).post("/auth/register").send(userPayload).expect(404);
+    await request(app).get("/auth/me").expect(404);
+    await request(app).get("/logged").expect(404);
+    await request(app).get("/users/ammar").expect(404);
+    await request(app).get("/api/v1/recipes").expect(404);
   });
 
   it("filters recipe lists by query params", async () => {
@@ -200,12 +209,12 @@ describe("API", () => {
     const accessToken = await register(agent);
 
     await agent
-      .post("/recipes")
+      .post("/api/recipes")
       .set("Authorization", `Bearer ${accessToken}`)
       .send(recipePayload)
       .expect(201);
     await agent
-      .post("/recipes")
+      .post("/api/recipes")
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
         ...recipePayload,
@@ -218,12 +227,12 @@ describe("API", () => {
       .expect(201);
 
     const response = await agent
-      .get("/recipes")
+      .get("/api/recipes")
       .query({ search: "pizza", difficulty: 3, maxPrepTime: 60, tag: "Italian" })
       .expect(200);
 
-    expect(response.body).toHaveLength(1);
-    expect(response.body[0]).toMatchObject({
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
       name: "Pizza",
       author: "ammar",
       tags: ["dinner", "italian"],
@@ -232,7 +241,7 @@ describe("API", () => {
 
   it("rejects invalid recipe list query params", async () => {
     const response = await request(createTestApp())
-      .get("/recipes")
+      .get("/api/recipes")
       .query({ difficulty: 10 })
       .expect(400);
 
@@ -250,7 +259,7 @@ describe("API", () => {
 
     const ownerAccessToken = await register(owner);
     const created = await owner
-      .post("/recipes")
+      .post("/api/recipes")
       .set("Authorization", `Bearer ${ownerAccessToken}`)
       .send(recipePayload)
       .expect(201);
@@ -262,7 +271,7 @@ describe("API", () => {
     });
 
     await otherUser
-      .put(`/recipes/${created.text}`)
+      .put(`/api/recipes/${created.body.data.id}`)
       .set("Authorization", `Bearer ${otherAccessToken}`)
       .send({ ...recipePayload, name: "Stolen Pizza" })
       .expect(401);
@@ -273,22 +282,25 @@ describe("API", () => {
     const agent = request.agent(app);
 
     const registerResponse = await agent
-      .post("/auth/register")
+      .post("/api/auth/register")
       .send(userPayload)
       .expect(201);
     const originalCookie = registerResponse.headers["set-cookie"][0];
 
-    const refreshResponse = await agent.post("/auth/refresh").expect(200);
-    expect(refreshResponse.body.accessToken).toBeTruthy();
+    const refreshResponse = await agent.post("/api/auth/refresh").expect(200);
+    expect(refreshResponse.body.data.accessToken).toBeTruthy();
 
-    await request(app).post("/auth/refresh").set("Cookie", originalCookie).expect(401);
+    await request(app)
+      .post("/api/auth/refresh")
+      .set("Cookie", originalCookie)
+      .expect(401);
   });
 
   it("revokes refresh tokens on logout", async () => {
     const agent = request.agent(createTestApp());
     await register(agent);
 
-    await agent.post("/auth/logout").expect(200);
-    await agent.post("/auth/refresh").expect(401);
+    await agent.post("/api/auth/logout").expect(204);
+    await agent.post("/api/auth/refresh").expect(401);
   });
 });

@@ -23,9 +23,9 @@ The main value of this version is the backend modernization:
 - unit, HTTP, and database-backed tests
 - GitHub Actions CI
 
-The frontend is still intentionally closer to the original app, with Vite and
-auth compatibility updates added so it can run on modern Node and talk to the
-new backend.
+The frontend is still intentionally closer to the original app, with Vite
+updates added so it can run on modern Node. Its API calls need to be migrated to
+the current `/api` backend contract next.
 
 ## Tech Stack
 
@@ -182,57 +182,50 @@ LOG_LEVEL
 The backend validates configuration at startup. In production,
 `DATABASE_URL` and `JWT_ACCESS_SECRET` must be explicitly set.
 
-## API Compatibility
+## API Contract
 
-The backend preserves the original route surface where useful, while also
-providing explicit `/auth/*` routes.
+Product routes live under `/api`. System routes stay unversioned because they
+are operational endpoints rather than product resources.
 
-New backend work should prefer `/api/v1/*` routes. Those routes return modern
-JSON envelopes with `id` fields and `data` wrappers, while the legacy routes
-remain available for the current frontend.
+Responses use JSON envelopes:
+
+```json
+{
+  "data": {
+    "id": "recipe-id"
+  }
+}
+```
 
 ### Recipes
 
 | Method | Route |
 | --- | --- |
-| `GET` | `/recipes` |
-| `GET` | `/recipes?search=&difficulty=&maxPrepTime=&author=&tag=&limit=&offset=` |
-| `POST` | `/recipes` |
-| `GET` | `/recipes/:id` |
-| `PUT` | `/recipes/:id` |
-| `DELETE` | `/recipes/:id` |
-| `GET` | `/api/v1/recipes` |
-| `POST` | `/api/v1/recipes` |
-| `GET` | `/api/v1/recipes/:id` |
-| `PUT` | `/api/v1/recipes/:id` |
-| `DELETE` | `/api/v1/recipes/:id` |
+| `GET` | `/api/recipes` |
+| `GET` | `/api/recipes?search=&difficulty=&maxPrepTime=&author=&tag=&limit=&offset=` |
+| `POST` | `/api/recipes` |
+| `GET` | `/api/recipes/:id` |
+| `PUT` | `/api/recipes/:id` |
+| `DELETE` | `/api/recipes/:id` |
 
 ### Auth
 
 | Method | Route |
 | --- | --- |
-| `POST` | `/auth/register` |
-| `POST` | `/auth/login` |
-| `POST` | `/auth/refresh` |
-| `POST` | `/auth/logout` |
-| `GET` | `/auth/me` |
-| `POST` | `/api/v1/auth/register` |
-| `POST` | `/api/v1/auth/login` |
-| `POST` | `/api/v1/auth/refresh` |
-| `POST` | `/api/v1/auth/logout` |
-| `GET` | `/api/v1/auth/me` |
+| `POST` | `/api/auth/register` |
+| `POST` | `/api/auth/login` |
+| `POST` | `/api/auth/refresh` |
+| `POST` | `/api/auth/logout` |
+| `GET` | `/api/auth/me` |
 
 ### Users
 
 | Method | Route |
 | --- | --- |
-| `POST` | `/users` |
-| `GET` | `/users/:username` |
-| `GET` | `/api/v1/users/:username` |
+| `GET` | `/api/users/:username` |
 
-Recipe responses still include legacy-compatible fields such as `_id` and
-plain `author` usernames. This kept the frontend migration smaller while the
-backend internals moved to PostgreSQL relations.
+The old legacy route surface was removed because the app is not in production
+and does not need backward compatibility yet.
 
 ## Authentication Model
 
@@ -282,4 +275,4 @@ product polish and frontend modernization:
 - add React Hook Form + Zod for forms
 - add TanStack Query for server state
 - add image uploads or favorites as future product features
-- eventually remove legacy API response shapes once the frontend is ready
+- migrate the frontend to the `/api` contract

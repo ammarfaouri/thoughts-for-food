@@ -2,9 +2,9 @@ export const openApiDocument = {
   openapi: "3.1.0",
   info: {
     title: "Thoughts for Food API",
-    version: "2.0.0",
+    version: "3.0.0",
     description:
-      "Recipe-sharing API using JWT access tokens and rotating HTTP-only refresh tokens. Recipe responses preserve legacy frontend fields such as `_id` while the backend uses PostgreSQL internally.",
+      "Recipe-sharing API using PostgreSQL, JWT access tokens, and rotating HTTP-only refresh tokens.",
   },
   servers: [{ url: "http://localhost:5000" }],
   tags: [{ name: "System" }, { name: "Auth" }, { name: "Users" }, { name: "Recipes" }],
@@ -42,6 +42,18 @@ export const openApiDocument = {
         },
       },
     },
+    "/metrics": {
+      get: {
+        tags: ["System"],
+        summary: "Prometheus-style HTTP metrics",
+        responses: {
+          "200": {
+            description: "Plain text HTTP counters",
+            content: { "text/plain": { schema: { type: "string" } } },
+          },
+        },
+      },
+    },
     "/openapi.json": {
       get: {
         tags: ["System"],
@@ -51,127 +63,7 @@ export const openApiDocument = {
         },
       },
     },
-    "/metrics": {
-      get: {
-        tags: ["System"],
-        summary: "Prometheus-style HTTP metrics",
-        responses: {
-          "200": {
-            description: "Plain text HTTP counters",
-            content: {
-              "text/plain": {
-                schema: { type: "string" },
-              },
-            },
-          },
-        },
-      },
-    },
-    "/users": {
-      post: {
-        tags: ["Users"],
-        summary: "Legacy alias for registering a user",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/RegisterUserRequest" },
-            },
-          },
-        },
-        responses: {
-          "201": {
-            description: "User created and token pair issued",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
-          "400": { $ref: "#/components/responses/ValidationError" },
-          "409": { description: "Username or email already exists" },
-          "500": { $ref: "#/components/responses/InternalServerError" },
-        },
-      },
-    },
-    "/users/{username}": {
-      get: {
-        tags: ["Users"],
-        summary: "Get a public user profile and recipe summaries",
-        parameters: [{ $ref: "#/components/parameters/Username" }],
-        responses: {
-          "200": {
-            description: "Public profile",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/UserProfile" },
-              },
-            },
-          },
-          "404": { $ref: "#/components/responses/NotFound" },
-          "500": { $ref: "#/components/responses/InternalServerError" },
-        },
-      },
-    },
-    "/login": {
-      post: {
-        tags: ["Auth"],
-        summary: "Legacy alias for logging in",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/LoginRequest" },
-            },
-          },
-        },
-        responses: {
-          "200": {
-            description: "Logged in and token pair issued",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
-          "400": { $ref: "#/components/responses/ValidationError" },
-          "401": { description: "Invalid password" },
-          "404": { description: "User does not exist" },
-          "429": { description: "Too many authentication attempts" },
-          "500": { $ref: "#/components/responses/InternalServerError" },
-        },
-      },
-    },
-    "/logged": {
-      get: {
-        tags: ["Auth"],
-        summary: "Legacy alias returning the current access-token username",
-        security: [{ bearerAuth: [] }],
-        responses: {
-          "200": {
-            description:
-              "Current username as plain text for legacy frontend compatibility",
-            content: {
-              "text/plain": {
-                schema: { type: "string", example: "ammar" },
-              },
-            },
-          },
-          "404": { description: "No active session" },
-        },
-      },
-    },
-    "/logout": {
-      post: {
-        tags: ["Auth"],
-        summary: "Legacy alias for revoking the current refresh token",
-        responses: {
-          "200": { description: "Logged out" },
-          "500": { $ref: "#/components/responses/InternalServerError" },
-        },
-      },
-    },
-    "/auth/register": {
+    "/api/auth/register": {
       post: {
         tags: ["Auth"],
         summary: "Register a new user and issue tokens",
@@ -184,27 +76,14 @@ export const openApiDocument = {
           },
         },
         responses: {
-          "201": {
-            description: "User created and token pair issued",
-            headers: {
-              "Set-Cookie": {
-                schema: { type: "string" },
-                description: "HTTP-only refresh token cookie",
-              },
-            },
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
+          "201": { $ref: "#/components/responses/AuthEnvelope" },
           "400": { $ref: "#/components/responses/ValidationError" },
           "409": { description: "Username or email already exists" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
       },
     },
-    "/auth/login": {
+    "/api/auth/login": {
       post: {
         tags: ["Auth"],
         summary: "Log in and issue tokens",
@@ -217,20 +96,7 @@ export const openApiDocument = {
           },
         },
         responses: {
-          "200": {
-            description: "Logged in and token pair issued",
-            headers: {
-              "Set-Cookie": {
-                schema: { type: "string" },
-                description: "HTTP-only refresh token cookie",
-              },
-            },
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
+          "200": { $ref: "#/components/responses/AuthEnvelope" },
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { description: "Invalid password" },
           "404": { description: "User does not exist" },
@@ -239,41 +105,28 @@ export const openApiDocument = {
         },
       },
     },
-    "/auth/refresh": {
+    "/api/auth/refresh": {
       post: {
         tags: ["Auth"],
         summary: "Rotate refresh token and issue a new access token",
         responses: {
-          "200": {
-            description: "Token pair rotated",
-            headers: {
-              "Set-Cookie": {
-                schema: { type: "string" },
-                description: "New HTTP-only refresh token cookie",
-              },
-            },
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/AuthResponse" },
-              },
-            },
-          },
+          "200": { $ref: "#/components/responses/AuthEnvelope" },
           "401": { description: "Missing, expired, invalid, or reused refresh token" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
       },
     },
-    "/auth/logout": {
+    "/api/auth/logout": {
       post: {
         tags: ["Auth"],
         summary: "Revoke the current refresh token",
         responses: {
-          "200": { description: "Logged out" },
+          "204": { description: "Logged out" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
       },
     },
-    "/auth/me": {
+    "/api/auth/me": {
       get: {
         tags: ["Auth"],
         summary: "Return the current access-token user",
@@ -283,7 +136,7 @@ export const openApiDocument = {
             description: "Authenticated user",
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/MeResponse" },
+                schema: { $ref: "#/components/schemas/MeEnvelope" },
               },
             },
           },
@@ -291,7 +144,7 @@ export const openApiDocument = {
         },
       },
     },
-    "/recipes": {
+    "/api/recipes": {
       get: {
         tags: ["Recipes"],
         summary: "List recipes",
@@ -322,7 +175,6 @@ export const openApiDocument = {
             name: "tag",
             in: "query",
             schema: { type: "string", minLength: 1, maxLength: 32 },
-            description: "Exact normalized recipe tag match",
           },
           {
             name: "limit",
@@ -340,13 +192,11 @@ export const openApiDocument = {
             description: "Recipe list",
             content: {
               "application/json": {
-                schema: {
-                  type: "array",
-                  items: { $ref: "#/components/schemas/Recipe" },
-                },
+                schema: { $ref: "#/components/schemas/RecipeListEnvelope" },
               },
             },
           },
+          "400": { $ref: "#/components/responses/ValidationError" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
       },
@@ -363,35 +213,20 @@ export const openApiDocument = {
           },
         },
         responses: {
-          "201": {
-            description:
-              "Created recipe ID as plain text for legacy frontend compatibility",
-            content: {
-              "text/plain": {
-                schema: { type: "string", format: "uuid" },
-              },
-            },
-          },
+          "201": { $ref: "#/components/responses/RecipeEnvelope" },
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { description: "Authentication required" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
       },
     },
-    "/recipes/{id}": {
+    "/api/recipes/{id}": {
       get: {
         tags: ["Recipes"],
         summary: "Get a recipe by ID",
         parameters: [{ $ref: "#/components/parameters/RecipeId" }],
         responses: {
-          "200": {
-            description: "Recipe details",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/Recipe" },
-              },
-            },
-          },
+          "200": { $ref: "#/components/responses/RecipeEnvelope" },
           "404": { $ref: "#/components/responses/NotFound" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
@@ -410,7 +245,7 @@ export const openApiDocument = {
           },
         },
         responses: {
-          "200": { description: "Updated" },
+          "200": { $ref: "#/components/responses/RecipeEnvelope" },
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { description: "Authentication required or not recipe owner" },
           "404": { $ref: "#/components/responses/NotFound" },
@@ -423,8 +258,27 @@ export const openApiDocument = {
         security: [{ bearerAuth: [] }],
         parameters: [{ $ref: "#/components/parameters/RecipeId" }],
         responses: {
-          "200": { description: "Deleted" },
+          "204": { description: "Deleted" },
           "401": { description: "Authentication required or not recipe owner" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalServerError" },
+        },
+      },
+    },
+    "/api/users/{username}": {
+      get: {
+        tags: ["Users"],
+        summary: "Get a public user profile and recipe summaries",
+        parameters: [{ $ref: "#/components/parameters/Username" }],
+        responses: {
+          "200": {
+            description: "Public profile",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UserProfileEnvelope" },
+              },
+            },
+          },
           "404": { $ref: "#/components/responses/NotFound" },
           "500": { $ref: "#/components/responses/InternalServerError" },
         },
@@ -454,6 +308,22 @@ export const openApiDocument = {
       },
     },
     responses: {
+      AuthEnvelope: {
+        description: "Token response",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/AuthEnvelope" },
+          },
+        },
+      },
+      RecipeEnvelope: {
+        description: "Recipe response",
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/RecipeEnvelope" },
+          },
+        },
+      },
       ValidationError: {
         description: "Request validation failed",
         content: {
@@ -544,9 +414,9 @@ export const openApiDocument = {
           { $ref: "#/components/schemas/RecipeDraft" },
           {
             type: "object",
-            required: ["_id", "author"],
+            required: ["id", "author"],
             properties: {
-              _id: { type: "string", format: "uuid" },
+              id: { type: "string", format: "uuid" },
               author: { type: "string", example: "ammar" },
             },
           },
@@ -554,9 +424,9 @@ export const openApiDocument = {
       },
       RecipeSummary: {
         type: "object",
-        required: ["_id", "name", "author", "description"],
+        required: ["id", "name", "author", "description"],
         properties: {
-          _id: { type: "string", format: "uuid" },
+          id: { type: "string", format: "uuid" },
           name: { type: "string", example: "Pizza" },
           author: { type: "string", example: "ammar" },
           description: { type: "string", example: "Simple pizza dough" },
@@ -593,27 +463,64 @@ export const openApiDocument = {
         type: "object",
         required: ["accessToken", "user"],
         properties: {
-          accessToken: { type: "string", description: "Short-lived JWT access token" },
+          accessToken: { type: "string" },
           user: { $ref: "#/components/schemas/AuthUser" },
         },
       },
-      MeResponse: {
+      AuthEnvelope: {
         type: "object",
-        required: ["user"],
+        required: ["data"],
         properties: {
-          user: { $ref: "#/components/schemas/AuthUser" },
+          data: { $ref: "#/components/schemas/AuthResponse" },
+        },
+      },
+      MeEnvelope: {
+        type: "object",
+        required: ["data"],
+        properties: {
+          data: {
+            type: "object",
+            required: ["user"],
+            properties: {
+              user: { $ref: "#/components/schemas/AuthUser" },
+            },
+          },
+        },
+      },
+      RecipeEnvelope: {
+        type: "object",
+        required: ["data"],
+        properties: {
+          data: { $ref: "#/components/schemas/Recipe" },
+        },
+      },
+      RecipeListEnvelope: {
+        type: "object",
+        required: ["data"],
+        properties: {
+          data: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Recipe" },
+          },
         },
       },
       UserProfile: {
         type: "object",
-        required: ["firstName", "lastName", "recipesInfo"],
+        required: ["firstName", "lastName", "recipes"],
         properties: {
           firstName: { type: "string", example: "Ammar" },
           lastName: { type: "string", example: "Faouri" },
-          recipesInfo: {
+          recipes: {
             type: "array",
             items: { $ref: "#/components/schemas/RecipeSummary" },
           },
+        },
+      },
+      UserProfileEnvelope: {
+        type: "object",
+        required: ["data"],
+        properties: {
+          data: { $ref: "#/components/schemas/UserProfile" },
         },
       },
       ErrorResponse: {

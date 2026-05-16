@@ -25,7 +25,7 @@ The backend now has:
 - PostgreSQL migrations and constraints
 - token-based auth with refresh token rotation
 - request validation, structured errors, request IDs, and structured logs
-- clean `/api/v1` JSON routes beside legacy-compatible routes
+- clean `/api` JSON routes without legacy aliases
 
 ## Architecture Decision
 
@@ -96,7 +96,7 @@ best improvements are product or frontend focused:
 - favorites or comments as user engagement features
 - frontend TypeScript migration
 - typed API client
-- migrate the frontend from legacy routes to `/api/v1`
+- migrate the frontend from old assumptions to `/api`
 
 I would avoid adding RBAC, queues, caching, or microservices until the product
 actually needs them.

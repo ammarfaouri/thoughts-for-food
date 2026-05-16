@@ -16,11 +16,8 @@ import { errorHandler } from "./interfaces/http/middleware/errorHandler";
 import { httpMetrics } from "./interfaces/http/middleware/httpMetrics";
 import { notFound } from "./interfaces/http/middleware/notFound";
 import { requestContext } from "./interfaces/http/middleware/requestContext";
-import { createApiV1Routes } from "./interfaces/http/routes/apiV1Routes";
-import { createAuthRoutes } from "./interfaces/http/routes/authRoutes";
-import { createRecipeRoutes } from "./interfaces/http/routes/recipeRoutes";
+import { createApiRoutes } from "./interfaces/http/routes/apiRoutes";
 import { createSystemRoutes } from "./interfaces/http/routes/systemRoutes";
-import { createUserRoutes } from "./interfaces/http/routes/userRoutes";
 
 type AppServices = {
   authService: AuthService;
@@ -60,14 +57,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.use(createSystemRoutes(prisma));
   app.use(
-    createApiV1Routes(services, {
-      enableRateLimit: options.enableRateLimit ?? env.NODE_ENV !== "test",
-    }),
-  );
-  app.use(createRecipeRoutes(services.recipeService, services.tokenService));
-  app.use(createUserRoutes(services.userProfileService));
-  app.use(
-    createAuthRoutes(services.authService, services.tokenService, {
+    createApiRoutes(services, {
       enableRateLimit: options.enableRateLimit ?? env.NODE_ENV !== "test",
     }),
   );

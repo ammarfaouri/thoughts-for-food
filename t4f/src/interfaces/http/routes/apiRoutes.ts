@@ -23,25 +23,25 @@ import {
   registerUserSchema,
 } from "../schemas";
 import {
-  serializeRecipeV1,
+  serializeRecipe,
   serializeTokenPair,
-  serializeUserProfileV1,
+  serializeUserProfile,
 } from "../serializers";
 
-type ApiV1RouteOptions = {
+type ApiRouteOptions = {
   enableRateLimit?: boolean;
 };
 
-type ApiV1RouteServices = {
+type ApiRouteServices = {
   authService: AuthService;
   tokenService: TokenService;
   recipeService: RecipeService;
   userProfileService: UserProfileService;
 };
 
-export function createApiV1Routes(
-  services: ApiV1RouteServices,
-  options: ApiV1RouteOptions = {},
+export function createApiRoutes(
+  services: ApiRouteServices,
+  options: ApiRouteOptions = {},
 ) {
   const router = Router();
   const authenticateAccessToken = createAccessTokenAuthenticator(services.tokenService);
@@ -50,7 +50,7 @@ export function createApiV1Routes(
     : (_req: unknown, _res: unknown, next: () => void) => next();
 
   router.post(
-    "/api/v1/auth/register",
+    "/api/auth/register",
     validateBody(registerUserSchema),
     asyncHandler(async (req, res) => {
       const user = await services.authService.register(req.body);
@@ -61,7 +61,7 @@ export function createApiV1Routes(
   );
 
   router.post(
-    "/api/v1/auth/login",
+    "/api/auth/login",
     authRateLimit,
     validateBody(loginSchema),
     asyncHandler(async (req, res) => {
@@ -73,7 +73,7 @@ export function createApiV1Routes(
   );
 
   router.post(
-    "/api/v1/auth/refresh",
+    "/api/auth/refresh",
     asyncHandler(async (req, res) => {
       const tokenPair = await services.tokenService.rotateRefreshToken(
         readRefreshToken(req),
@@ -84,7 +84,7 @@ export function createApiV1Routes(
   );
 
   router.post(
-    "/api/v1/auth/logout",
+    "/api/auth/logout",
     asyncHandler(async (req, res) => {
       const refreshToken = req.cookies?.[refreshTokenCookieName];
       if (refreshToken) {
@@ -95,19 +95,19 @@ export function createApiV1Routes(
     }),
   );
 
-  router.get("/api/v1/auth/me", authenticateAccessToken, requireAuth, (req, res) => {
+  router.get("/api/auth/me", authenticateAccessToken, requireAuth, (req, res) => {
     res.status(200).json({ data: { user: req.user } });
   });
 
   router
-    .route("/api/v1/recipes")
+    .route("/api/recipes")
     .get(
       validateQuery(recipeSearchQuerySchema),
       asyncHandler(async (req, res) => {
         const recipes = await services.recipeService.findAll(
           req.query as unknown as RecipeSearchCriteria,
         );
-        res.status(200).json({ data: recipes.map(serializeRecipeV1) });
+        res.status(200).json({ data: recipes.map(serializeRecipe) });
       }),
     )
     .post(
@@ -116,16 +116,16 @@ export function createApiV1Routes(
       validateBody(recipeDraftSchema),
       asyncHandler(async (req, res) => {
         const recipe = await services.recipeService.create(req.user!.id, req.body);
-        res.status(201).json({ data: serializeRecipeV1(recipe) });
+        res.status(201).json({ data: serializeRecipe(recipe) });
       }),
     );
 
   router
-    .route("/api/v1/recipes/:id")
+    .route("/api/recipes/:id")
     .get(
       asyncHandler(async (req, res) => {
         const recipe = await services.recipeService.findById(req.params.id);
-        res.status(200).json({ data: serializeRecipeV1(recipe) });
+        res.status(200).json({ data: serializeRecipe(recipe) });
       }),
     )
     .put(
@@ -138,7 +138,7 @@ export function createApiV1Routes(
           req.user!.username,
           req.body,
         );
-        res.status(200).json({ data: serializeRecipeV1(recipe) });
+        res.status(200).json({ data: serializeRecipe(recipe) });
       }),
     )
     .delete(
@@ -151,10 +151,10 @@ export function createApiV1Routes(
     );
 
   router.get(
-    "/api/v1/users/:username",
+    "/api/users/:username",
     asyncHandler(async (req, res) => {
       const profile = await services.userProfileService.getProfile(req.params.username);
-      res.status(200).json({ data: serializeUserProfileV1(profile) });
+      res.status(200).json({ data: serializeUserProfile(profile) });
     }),
   );
 
