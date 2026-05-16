@@ -95,8 +95,8 @@ as `/login`, `/logged`, and `/recipes`. Because this project is not in
 production, the backend now exposes only a clean `/api/*` contract with `id`
 fields and JSON `data` envelopes.
 
-That means the frontend must migrate to the new contract next, but the backend
-is easier to explain and maintain.
+The frontend now consumes that contract through a typed API client, so the
+backend and frontend agree on `/api/*`, `id` fields, and response envelopes.
 
 ## Testing Strategy
 
@@ -152,7 +152,6 @@ work is optional product/deployment work rather than modernization foundation:
 - Add favorites if the app needs a small user-specific product feature.
 - Add file/image upload flow if recipe photos become part of the core UX.
 - Add deployment configuration when choosing a real hosting target.
-- Migrate the frontend to `/api/*`.
 
 ## Senior-Level Framing
 

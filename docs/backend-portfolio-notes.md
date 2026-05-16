@@ -89,14 +89,15 @@ These are intentionally small additions, but they show production judgment.
 
 ## What I Would Improve Next
 
-The backend foundation is good enough to stop adding infrastructure. The next
-best improvements are product or frontend focused:
+The backend foundation is good enough to stop adding infrastructure. The
+frontend has also been modernized into a presentable TypeScript/Vite app. The
+next best improvements are product, deployment, or ecosystem upgrades:
 
 - image upload flow for recipe photos
 - favorites or comments as user engagement features
-- frontend TypeScript migration
-- typed API client
-- migrate the frontend from old assumptions to `/api`
+- React 18+ and React Router v6+ upgrades
+- richer frontend tests
+- deployment configuration and environment-specific setup
 
 I would avoid adding RBAC, queues, caching, or microservices until the product
 actually needs them.

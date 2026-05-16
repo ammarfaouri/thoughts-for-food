@@ -104,7 +104,8 @@ Example:
 GET /api/recipes?search=pizza&difficulty=3&maxPrepTime=60&tag=italian&limit=10&offset=0
 ```
 
-## Frontend Migration Note
+## Frontend Contract Status
 
-The current frontend may still reference old route names and `_id`. The next
-frontend step is to update it to consume `/api/*` and `id`.
+The frontend now consumes the clean `/api/*` contract through a typed Axios
+client. It unwraps `data` envelopes, uses `id` fields, treats delete/logout as
+`204 No Content`, and sends bearer access tokens for protected recipe writes.

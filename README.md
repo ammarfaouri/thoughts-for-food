@@ -1,63 +1,71 @@
 # Thoughts for Food
 
 Thoughts for Food is a full-stack recipe-sharing app that started as a first
-coding project and has been modernized into a backend-focused portfolio project.
+coding project and has been modernized into a portfolio-ready application.
 
 Users can register, log in, browse recipes, search/filter recipes, publish their
 own recipes, edit/delete recipes they own, and view public author profiles.
 
-## Current Focus
+## Current State
 
-The main value of this version is the backend modernization:
+The project now demonstrates both backend and frontend modernization:
 
-- TypeScript Express API
-- PostgreSQL persistence with Prisma
-- migration-based schema management
-- lightweight hexagonal architecture
+- TypeScript Express API with PostgreSQL and Prisma
+- lightweight hexagonal backend architecture
 - JWT access tokens with rotating refresh tokens
-- Zod request validation
-- structured errors with request IDs
-- Pino structured logging
-- health/readiness routes
-- OpenAPI contract at `/openapi.json`
-- unit, HTTP, and database-backed tests
-- GitHub Actions CI
-
-The frontend is still intentionally closer to the original app, with Vite
-updates added so it can run on modern Node. Its API calls need to be migrated to
-the current `/api` backend contract next.
+- clean `/api` contract with OpenAPI documentation
+- request validation, structured errors, request IDs, logs, metrics, and health checks
+- Vite React frontend with TypeScript and feature folders
+- TanStack Query for server state
+- React Hook Form and Zod for form handling
+- modernized startup-style UI polish
+- backend and frontend CI quality gates
 
 ## Tech Stack
 
 ### Backend
 
-| Area | Technology |
-| --- | --- |
-| Language | TypeScript |
-| Server | Express |
-| Database | PostgreSQL |
-| ORM | Prisma |
-| Validation | Zod |
-| Authentication | JWT access tokens + rotating refresh tokens |
-| Password security | bcrypt |
-| Logging | Pino / pino-http |
-| Testing | Vitest, Supertest |
-| Local infrastructure | Docker Compose |
+| Area                 | Technology                                  |
+| -------------------- | ------------------------------------------- |
+| Language             | TypeScript                                  |
+| Server               | Express                                     |
+| Database             | PostgreSQL                                  |
+| ORM                  | Prisma                                      |
+| Validation           | Zod                                         |
+| Authentication       | JWT access tokens + rotating refresh tokens |
+| Password security    | bcrypt                                      |
+| Logging              | Pino / pino-http                            |
+| Testing              | Vitest, Supertest                           |
+| Local infrastructure | Docker Compose                              |
 
 ### Frontend
 
-| Area | Technology |
-| --- | --- |
-| UI library | React 16 |
-| Build tool | Vite |
-| Routing | React Router v5 |
-| Components | React Bootstrap |
-| HTTP client | Axios |
-| Testing | Vitest |
+| Area         | Technology              |
+| ------------ | ----------------------- |
+| Language     | TypeScript              |
+| UI library   | React 16                |
+| Build tool   | Vite                    |
+| Routing      | React Router v5         |
+| Components   | React Bootstrap         |
+| Server state | TanStack Query v4       |
+| Forms        | React Hook Form + Zod   |
+| HTTP client  | Axios                   |
+| Testing      | Vitest, Testing Library |
 
-## Backend Architecture
+React Query v4 is used because the app is still on React 16. Upgrading React is
+a future step before moving to newer ecosystem versions.
 
-The backend uses a lightweight hexagonal / clean architecture shape:
+## Project Structure
+
+```txt
+thoughts-for-food
+|-- t4f/            Modern TypeScript Express API
+|-- react-client/   Vite React frontend
+|-- docs/           Architecture and portfolio notes
+`-- .github/        CI workflow
+```
+
+Backend:
 
 ```txt
 t4f/src
@@ -69,18 +77,41 @@ t4f/src
 `-- shared/           Shared application errors
 ```
 
-The important boundary is dependency direction:
+Frontend:
+
+```txt
+react-client/src
+|-- app/              App shell and query client
+|-- api/              Axios API client and DTO types
+|-- features/
+|   |-- auth/         Login/signup pages and schemas
+|   |-- marketing/    Home/about/contact pages
+|   |-- recipes/      Recipe pages, query hooks, form schema, card component
+|   `-- users/        Public profile page and query hooks
+`-- shared/           Shared layout components
+```
+
+## Architecture
+
+The backend uses a lightweight hexagonal / clean architecture shape:
 
 ```txt
 HTTP -> application -> domain contracts <- infrastructure
 ```
 
 Application services do not import Express or Prisma. Express is treated as an
-HTTP adapter, and Prisma is treated as a persistence adapter.
+HTTP adapter, and Prisma is treated as a persistence adapter. This keeps
+ownership rules, auth decisions, and recipe behavior testable without tying
+business logic to web/database details.
 
-More backend reasoning:
+The frontend is organized by feature. Pages call typed API/query hooks instead
+of scattering fetch logic through components. Forms use schemas so validation is
+defined in one place.
+
+More reasoning:
 
 - [Backend Modernization Notes](docs/backend-modernization.md)
+- [Frontend Modernization Notes](docs/frontend-modernization.md)
 - [API Contract Notes](docs/api-contract.md)
 - [Backend Portfolio Notes](docs/backend-portfolio-notes.md)
 
@@ -127,13 +158,14 @@ From the frontend directory:
 ```bash
 cd react-client
 npm install
-npm run dev
+npm start
 ```
 
-Vite will print the local URL, usually:
+Vite is configured to run on port `3000` and proxy `/api` calls to the backend
+at `http://localhost:5000`.
 
 ```txt
-http://localhost:5173
+http://localhost:3000
 ```
 
 ## Useful Commands
@@ -153,17 +185,19 @@ npm audit --omit=dev
 npm run auth:cleanup-refresh-tokens
 ```
 
-Backend commits run a lightweight pre-commit hook through Husky and lint-staged.
-It formats and lints staged backend files only; full tests remain manual/CI
-checks so local commits stay fast.
-
 Frontend:
 
 ```bash
 cd react-client
+npm run typecheck
 npm test
 npm run build
+npm audit --omit=dev
 ```
+
+Backend commits run a lightweight pre-commit hook through Husky and lint-staged.
+It formats and lints staged backend files only; full tests remain manual/CI
+checks so local commits stay fast.
 
 ## Environment Variables
 
@@ -199,30 +233,30 @@ Responses use JSON envelopes:
 
 ### Recipes
 
-| Method | Route |
-| --- | --- |
-| `GET` | `/api/recipes` |
-| `GET` | `/api/recipes?search=&difficulty=&maxPrepTime=&author=&tag=&limit=&offset=` |
-| `POST` | `/api/recipes` |
-| `GET` | `/api/recipes/:id` |
-| `PUT` | `/api/recipes/:id` |
-| `DELETE` | `/api/recipes/:id` |
+| Method   | Route                                                                       |
+| -------- | --------------------------------------------------------------------------- |
+| `GET`    | `/api/recipes`                                                              |
+| `GET`    | `/api/recipes?search=&difficulty=&maxPrepTime=&author=&tag=&limit=&offset=` |
+| `POST`   | `/api/recipes`                                                              |
+| `GET`    | `/api/recipes/:id`                                                          |
+| `PUT`    | `/api/recipes/:id`                                                          |
+| `DELETE` | `/api/recipes/:id`                                                          |
 
 ### Auth
 
-| Method | Route |
-| --- | --- |
+| Method | Route                |
+| ------ | -------------------- |
 | `POST` | `/api/auth/register` |
-| `POST` | `/api/auth/login` |
-| `POST` | `/api/auth/refresh` |
-| `POST` | `/api/auth/logout` |
-| `GET` | `/api/auth/me` |
+| `POST` | `/api/auth/login`    |
+| `POST` | `/api/auth/refresh`  |
+| `POST` | `/api/auth/logout`   |
+| `GET`  | `/api/auth/me`       |
 
 ### Users
 
-| Method | Route |
-| --- | --- |
-| `GET` | `/api/users/:username` |
+| Method | Route                  |
+| ------ | ---------------------- |
+| `GET`  | `/api/users/:username` |
 
 The old legacy route surface was removed because the app is not in production
 and does not need backward compatibility yet.
@@ -252,6 +286,9 @@ Backend CI:
 
 - install dependencies with `npm ci`
 - generate Prisma client
+- check formatting
+- lint
+- typecheck
 - apply migrations to PostgreSQL
 - run fast tests
 - run database-backed tests
@@ -262,17 +299,21 @@ Frontend CI:
 
 - install dependencies with `npm ci`
 - run tests
+- typecheck
 - build Vite app
 - audit production dependencies
 
 ## Project Status
 
-Backend modernization is effectively wrapped. The remaining work is mostly
-product polish and frontend modernization:
+The backend foundation is effectively wrapped. The frontend has been modernized
+enough to present the project cleanly: TypeScript, Vite, feature folders,
+TanStack Query, React Hook Form, Zod, and a polished UI pass are in place.
 
-- convert the React app to TypeScript
-- replace older class components over time
-- add React Hook Form + Zod for forms
-- add TanStack Query for server state
-- add image uploads or favorites as future product features
-- migrate the frontend to the `/api` contract
+Good future improvements:
+
+- upgrade React 16 to React 18+
+- upgrade React Router v5 to v6+
+- move auth state into an `AuthProvider`
+- split `api/client.ts` into feature API modules
+- add richer frontend tests
+- add product features such as recipe image upload, favorites, comments, or ratings
