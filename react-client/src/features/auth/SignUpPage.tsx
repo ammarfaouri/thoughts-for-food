@@ -1,5 +1,7 @@
 import axios from "axios";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
@@ -7,55 +9,46 @@ import Spinner from "react-bootstrap/Spinner";
 import { type RouteComponentProps } from "react-router-dom";
 import { signUp } from "../../api/client";
 import type { AuthViewState } from "../../app/App";
-import type { RegisterUserInput } from "../../api/types";
+import { signUpSchema, type SignUpFormValues } from "./authSchemas";
 
 type SignUpPageProps = RouteComponentProps & {
   loggedIn: boolean;
   login: (state: AuthViewState) => void;
 };
 
-const initialFormState: RegisterUserInput = {
-  firstName: "",
-  lastName: "",
-  username: "",
-  email: "",
-  password: "",
-};
-
 function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps) {
-  const [form, setForm] = useState<RegisterUserInput>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
-  const [validated, setValidated] = useState(false);
-  const [disableButton, setDisableButton] = useState(false);
+  const {
+    formState: { errors, isSubmitting, isSubmitted },
+    handleSubmit,
+    register,
+  } = useForm<SignUpFormValues>({
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      username: "",
+      email: "",
+      password: "",
+    },
+    resolver: zodResolver(signUpSchema),
+  });
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = event.target;
-    setForm((currentForm) => ({ ...currentForm, [id]: value }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setValidated(true);
+  const onSubmit = async (values: SignUpFormValues) => {
     setResponseStatus(null);
-    setDisableButton(true);
-
-    if (!event.currentTarget.checkValidity()) {
-      setDisableButton(false);
-      return;
-    }
 
     try {
-      const auth = await signUp(form);
+      const auth = await signUp(values);
       setLoginState({
         loggedIn: true,
         username: auth.user.username,
       });
-      history.push(`/Users/${form.username}`);
+      history.push(`/Users/${values.username}`);
     } catch (error) {
       setResponseStatus(getResponseStatus(error));
-      setDisableButton(false);
     }
   };
+  const usernameError =
+    responseStatus === 409 ? "User already exists" : errors.username?.message;
 
   if (loggedIn) {
     return <div className="SignUpForm">You are already signed in</div>;
@@ -73,23 +66,22 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
       <Form
         className="SignupInput"
         noValidate
-        validated={validated}
-        onSubmit={handleSubmit}
+        validated={isSubmitted}
+        onSubmit={handleSubmit(onSubmit)}
       >
         <Form.Group controlId="firstName">
           <Form.Label>First Name</Form.Label>
           <Form.Control
             type="text"
             placeholder="First Name"
-            value={form.firstName}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.firstName)}
+            {...register("firstName")}
           />
           <Form.Control.Feedback type="valid">
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-            First Name required
+                {errors.firstName?.message}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="lastName">
@@ -97,15 +89,14 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
           <Form.Control
             type="text"
             placeholder="Last Name"
-            value={form.lastName}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.lastName)}
+            {...register("lastName")}
           />
           <Form.Control.Feedback type="valid">
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-            Last Name required
+                {errors.lastName?.message}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="username">
@@ -113,14 +104,12 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
           <Form.Control
             type="text"
             placeholder="Username"
-            value={form.username}
-            onChange={handleChange}
-            required
-            isInvalid={responseStatus === 409}
+            isInvalid={Boolean(usernameError)}
+            {...register("username")}
           />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-            {responseStatus === 409 ? "User already exists" : "Username required"}
+            {usernameError}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="email">
@@ -128,15 +117,14 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
           <Form.Control
             type="email"
             placeholder="Enter email"
-            value={form.email}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.email)}
+            {...register("email")}
           />
           <Form.Control.Feedback type="valid">
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-            Email required
+                {errors.email?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
@@ -145,20 +133,19 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
           <Form.Control
             type="password"
             placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.password)}
+            {...register("password")}
           />
           <Form.Control.Feedback type="valid">
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-            Password required
+                {errors.password?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
-        <Button variant="primary" type="submit" disabled={disableButton}>
-          {disableButton ? (
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
             <Spinner
               as="span"
               animation="border"

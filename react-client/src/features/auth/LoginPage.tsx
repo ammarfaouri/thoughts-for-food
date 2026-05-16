@@ -1,48 +1,39 @@
 import axios from "axios";
-import React, { ChangeEvent, FormEvent, useState } from "react";
+import React, { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import { type RouteComponentProps } from "react-router-dom";
 import { login } from "../../api/client";
 import type { AuthViewState } from "../../app/App";
+import { loginSchema, type LoginFormValues } from "./authSchemas";
 
 type LoginPageProps = RouteComponentProps & {
   loggedIn: boolean;
   login: (state: AuthViewState) => void;
 };
 
-type LoginPageFormState = {
-  username: string;
-  password: string;
-};
-
-const initialFormState: LoginPageFormState = {
-  username: "",
-  password: "",
-};
-
 function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) {
-  const [form, setForm] = useState<LoginPageFormState>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
-  const [validated, setValidated] = useState(false);
+  const {
+    formState: { errors, isSubmitting, isSubmitted },
+    handleSubmit,
+    register,
+  } = useForm<LoginFormValues>({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = event.target;
-    setForm((currentForm) => ({ ...currentForm, [id]: value }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setValidated(true);
+  const onSubmit = async (values: LoginFormValues) => {
     setResponseStatus(null);
 
-    if (!event.currentTarget.checkValidity()) {
-      return;
-    }
-
     try {
-      const auth = await login(form);
+      const auth = await login(values);
       setLoginState({
         loggedIn: true,
         username: auth.user.username,
@@ -52,6 +43,10 @@ function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) 
       setResponseStatus(getResponseStatus(error));
     }
   };
+  const usernameError =
+    responseStatus === 404 ? "User does not exist" : errors.username?.message;
+  const passwordError =
+    responseStatus === 401 ? "Password incorrect" : errors.password?.message;
 
   if (loggedIn) {
     return <div className="LoginForm">You are already signed in</div>;
@@ -68,8 +63,8 @@ function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) 
       <Form
         className="LoginInput"
         noValidate
-        validated={validated}
-        onSubmit={handleSubmit}
+        validated={isSubmitted}
+        onSubmit={handleSubmit(onSubmit)}
       >
         <h2>Log in with your account!</h2>
         <Form.Group controlId="username">
@@ -77,14 +72,12 @@ function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) 
           <Form.Control
             type="text"
             placeholder="Username"
-            value={form.username}
-            onChange={handleChange}
-            isInvalid={responseStatus === 404}
-            required
+            isInvalid={Boolean(usernameError)}
+            {...register("username")}
           />
 
           <Form.Control.Feedback type="invalid">
-            {responseStatus === 404 ? "User does not exist" : "Username required"}
+            {usernameError}
           </Form.Control.Feedback>
         </Form.Group>
 
@@ -93,18 +86,16 @@ function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) 
           <Form.Control
             type="password"
             placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            isInvalid={responseStatus === 401}
-            required
+            isInvalid={Boolean(passwordError)}
+            {...register("password")}
           />
 
           <Form.Control.Feedback type="invalid">
-            {responseStatus === 401 ? "Password incorrect" : "Password required"}
+            {passwordError}
           </Form.Control.Feedback>
         </Form.Group>
 
-        <Button variant="primary" type="submit">
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
           Log in{" "}
         </Button>
       </Form>

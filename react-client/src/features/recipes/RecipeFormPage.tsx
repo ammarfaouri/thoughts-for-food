@@ -1,5 +1,7 @@
 import axios from "axios";
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFieldArray, useForm } from "react-hook-form";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Col from "react-bootstrap/Col";
@@ -8,9 +10,15 @@ import Spinner from "react-bootstrap/Spinner";
 import { type RouteComponentProps } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { createRecipe, getRecipe, updateRecipe } from "../../api/client";
-import type { Ingredient } from "../../api/types";
 import { recipeKeys } from "./recipeQueries";
 import { userKeys } from "../users/userQueries";
+import {
+  emptyIngredient,
+  emptyMethodStep,
+  initialRecipeFormValues,
+  recipeFormSchema,
+  type RecipeFormValues,
+} from "./recipeFormSchema";
 
 type RecipeRouteParams = {
   id?: string;
@@ -22,32 +30,37 @@ type RecipeFormPageProps = RouteComponentProps<RecipeRouteParams> & {
   edit?: boolean;
 };
 
-type RecipeFormState = {
-  name: string;
-  description: string;
-  prepTime: string | number;
-  difficulty: string | number;
-  ingredients: Ingredient[];
-  method: string[];
-};
-
-const emptyIngredient: Ingredient = { amount: "", unit: "", name: "" };
-
-const initialFormState: RecipeFormState = {
-  name: "",
-  description: "",
-  prepTime: "",
-  difficulty: "1",
-  ingredients: [emptyIngredient],
-  method: [""],
-};
-
 function RecipeFormPage({ edit = false, history, loggedIn, match, user }: RecipeFormPageProps) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState<RecipeFormState>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
-  const [validated, setValidated] = useState(false);
-  const [disableButton, setDisableButton] = useState(false);
+  const {
+    control,
+    formState: { errors, isSubmitting, isSubmitted },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<RecipeFormValues>({
+    defaultValues: initialRecipeFormValues,
+    resolver: zodResolver(recipeFormSchema),
+  });
+
+  const {
+    append: appendIngredient,
+    fields: ingredientFields,
+    remove: removeIngredient,
+  } = useFieldArray({
+    control,
+    name: "ingredients",
+  });
+
+  const {
+    append: appendMethodStep,
+    fields: methodFields,
+    remove: removeMethodStep,
+  } = useFieldArray({
+    control,
+    name: "method",
+  });
 
   useEffect(() => {
     if (!edit || !match.params.id) {
@@ -57,13 +70,17 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
     getRecipe(match.params.id)
       .then((recipe) => {
         if (recipe.author === user) {
-          setForm({
+          reset({
             name: recipe.name,
             description: recipe.description,
-            prepTime: recipe.prepTime,
-            difficulty: recipe.difficulty,
-            ingredients: recipe.ingredients,
-            method: recipe.method,
+            prepTime: String(recipe.prepTime),
+            difficulty: toDifficultyValue(recipe.difficulty),
+            ingredients: recipe.ingredients.map((ingredient) => ({
+              amount: String(ingredient.amount),
+              unit: ingredient.unit,
+              name: ingredient.name,
+            })),
+            method: recipe.method.map((step) => ({ step })),
           });
         } else {
           history.push("/nicetry");
@@ -73,111 +90,34 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
         // handle error
         console.log(error);
       });
-  }, [edit, history, match.params.id, user]);
-
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = event.target;
-    setForm((currentForm) => ({ ...currentForm, [id]: value }));
-  };
+  }, [edit, history, match.params.id, reset, user]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     console.log(event.target.files);
   };
 
-  const handleIngredientChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-    ingredientIndex: number
-  ) => {
-    const field = event.target.id.replace(/\d+$/, "") as keyof Ingredient;
-    const { value } = event.target;
-
-    setForm((currentForm) => ({
-      ...currentForm,
-      ingredients: currentForm.ingredients.map((ingredient, index) => {
-        if (ingredientIndex === index) {
-          return { ...ingredient, [field]: value };
-        }
-
-        return ingredient;
-      }),
-    }));
-  };
-
-  const handleAddIngredient = () => {
-    setForm((currentForm) => ({
-      ...currentForm,
-      ingredients: [...currentForm.ingredients, { ...emptyIngredient }],
-    }));
-  };
-
-  const handleIngredientDelete = (ingredientIndex: number) => {
-    setForm((currentForm) => ({
-      ...currentForm,
-      ingredients: currentForm.ingredients.filter((ingredient, index) => {
-        return index !== ingredientIndex;
-      }),
-    }));
-  };
-
-  const handleAddMethod = () => {
-    setForm((currentForm) => ({
-      ...currentForm,
-      method: [...currentForm.method, ""],
-    }));
-  };
-
-  const handleMethodChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-    methodIndex: number
-  ) => {
-    const { value } = event.target;
-
-    setForm((currentForm) => ({
-      ...currentForm,
-      method: currentForm.method.map((method, index) => {
-        if (index === methodIndex) {
-          return value;
-        }
-
-        return method;
-      }),
-    }));
-  };
-
-  const handleMethodDelete = (methodIndex: number) => {
-    setForm((currentForm) => ({
-      ...currentForm,
-      method: currentForm.method.filter((method, index) => {
-        return index !== methodIndex;
-      }),
-    }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const targetForm = event.currentTarget;
+  const onSubmit = async (values: RecipeFormValues) => {
     const recipeId = match.params.id;
+    const recipeDraft = {
+      name: values.name,
+      description: values.description,
+      prepTime: values.prepTime,
+      difficulty: values.difficulty,
+      ingredients: values.ingredients,
+      method: values.method.map(({ step }) => step),
+    };
 
-    setValidated(true);
     setResponseStatus(null);
-    setDisableButton(true);
-
-    if (!targetForm.checkValidity()) {
-      setDisableButton(false);
-      return;
-    }
 
     try {
       if (edit && recipeId) {
-        const recipe = await updateRecipe(recipeId, form);
+        const recipe = await updateRecipe(recipeId, recipeDraft);
         queryClient.setQueryData(recipeKeys.detail(recipeId), recipe);
         queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
         queryClient.invalidateQueries({ queryKey: userKeys.profile(recipe.author) });
         history.push(`/Recipes/${recipeId}`);
       } else {
-        const recipe = await createRecipe({ ...form, author: user });
+        const recipe = await createRecipe({ ...recipeDraft, author: user });
         queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
         queryClient.invalidateQueries({ queryKey: userKeys.profile(recipe.author) });
         history.push(`/Recipes/${recipe.id}`);
@@ -185,58 +125,56 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
     } catch (error) {
       console.log(error);
       setResponseStatus(getResponseStatus(error));
-      setDisableButton(false);
     }
   };
 
-  const ingredientForms = form.ingredients.map((ingredient, index) => {
+  const ingredientForms = ingredientFields.map((field, index) => {
+    const ingredientError = errors.ingredients?.[index];
+
     return (
-      <Form.Row key={`ingredient-${index}`}>
+      <Form.Row key={field.id}>
         <Form.Label>Ingredient {index + 1}</Form.Label>
-        <Form.Group as={Col} controlId={`amount${index}`}>
+        <Form.Group as={Col} controlId={`ingredients.${index}.amount`}>
           <Form.Label>Amount</Form.Label>
           <Form.Control
             type="number"
             placeholder="Amount"
-            value={ingredient.amount}
-            required
-            onChange={(event) => {
-              handleIngredientChange(event, index);
-            }}
+            isInvalid={Boolean(ingredientError?.amount)}
+            {...register(`ingredients.${index}.amount`)}
           />
           <Form.Control.Feedback type="invalid">
-            Amount must be a number
+            {ingredientError?.amount?.message}
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group as={Col} controlId={`unit${index}`}>
+        <Form.Group as={Col} controlId={`ingredients.${index}.unit`}>
           <Form.Label>Unit</Form.Label>
           <Form.Control
             type="text"
             placeholder="Unit"
-            value={ingredient.unit}
-            required
-            onChange={(event) => {
-              handleIngredientChange(event, index);
-            }}
+            isInvalid={Boolean(ingredientError?.unit)}
+            {...register(`ingredients.${index}.unit`)}
           />
+          <Form.Control.Feedback type="invalid">
+            {ingredientError?.unit?.message}
+          </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group as={Col} controlId={`name${index}`}>
+        <Form.Group as={Col} controlId={`ingredients.${index}.name`}>
           <Form.Label>Name</Form.Label>
           <Form.Control
             type="text"
             placeholder="Name"
-            value={ingredient.name}
-            required
-            onChange={(event) => {
-              handleIngredientChange(event, index);
-            }}
+            isInvalid={Boolean(ingredientError?.name)}
+            {...register(`ingredients.${index}.name`)}
           />
+          <Form.Control.Feedback type="invalid">
+            {ingredientError?.name?.message}
+          </Form.Control.Feedback>
         </Form.Group>
         {index ? (
           <Button
             className="delete-button"
             variant="danger"
-            onClick={() => handleIngredientDelete(index)}
+            onClick={() => removeIngredient(index)}
           >
             Delete ingredient
           </Button>
@@ -245,21 +183,23 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
     );
   });
 
-  const methodForms = form.method.map((method, index) => {
+  const methodForms = methodFields.map((field, index) => {
+    const methodError = errors.method?.[index];
+
     return (
-      <Form.Group key={`method-${index}`} controlId={`method${index}`}>
+      <Form.Group key={field.id} controlId={`method.${index}.step`}>
         <Form.Label>Step {index + 1}</Form.Label>
         <Form.Control
           type="text"
           placeholder="Step"
-          value={method}
-          required
-          onChange={(event) => {
-            handleMethodChange(event, index);
-          }}
+          isInvalid={Boolean(methodError?.step)}
+          {...register(`method.${index}.step`)}
         />
+        <Form.Control.Feedback type="invalid">
+          {methodError?.step?.message}
+        </Form.Control.Feedback>
         {index ? (
-          <Button variant="danger" onClick={() => handleMethodDelete(index)}>
+          <Button variant="danger" onClick={() => removeMethodStep(index)}>
             Delete Step
           </Button>
         ) : null}
@@ -291,8 +231,8 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
       <Form
         className="RecipeInput"
         noValidate
-        validated={validated}
-        onSubmit={handleSubmit}
+        validated={isSubmitted}
+        onSubmit={handleSubmit(onSubmit)}
       >
         <Form.Row>
           <Form.Group as={Col} controlId="name">
@@ -300,10 +240,12 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
             <Form.Control
               type="text"
               placeholder="Name"
-              value={form.name}
-              onChange={handleChange}
-              required
+              isInvalid={Boolean(errors.name)}
+              {...register("name")}
             />
+            <Form.Control.Feedback type="invalid">
+              {errors.name?.message}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group as={Col} controlId="prepTime">
@@ -311,12 +253,11 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
             <Form.Control
               type="number"
               placeholder="Preparation time"
-              value={form.prepTime}
-              onChange={handleChange}
-              required
+              isInvalid={Boolean(errors.prepTime)}
+              {...register("prepTime")}
             />
             <Form.Control.Feedback type="invalid">
-              prepTime should be a number in minutes
+              {errors.prepTime?.message}
             </Form.Control.Feedback>
           </Form.Group>
         </Form.Row>
@@ -336,10 +277,12 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
             as="textarea"
             rows={7}
             placeholder="Description"
-            value={form.description}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.description)}
+            {...register("description")}
           />
+          <Form.Control.Feedback type="invalid">
+            {errors.description?.message}
+          </Form.Control.Feedback>
         </Form.Group>
 
         <Form.Group controlId="difficulty">
@@ -348,9 +291,8 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
             type="number"
             as="select"
             custom
-            value={form.difficulty}
-            onChange={handleChange}
-            required
+            isInvalid={Boolean(errors.difficulty)}
+            {...register("difficulty")}
           >
             <option>1</option>
             <option>2</option>
@@ -358,26 +300,31 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
             <option>4</option>
             <option>5</option>
           </Form.Control>
+          <Form.Control.Feedback type="invalid">
+            {errors.difficulty?.message}
+          </Form.Control.Feedback>
         </Form.Group>
         <h3>Ingredients</h3>
-        <Button onClick={handleAddIngredient} variant="primary">
+        <Button onClick={() => appendIngredient({ ...emptyIngredient })} variant="primary">
           Add ingredient
         </Button>
         {ingredientForms}
         <h3>Method</h3>
-        <Button onClick={handleAddMethod} variant="primary">
+        <Button onClick={() => appendMethodStep({ ...emptyMethodStep })} variant="primary">
           Add step
         </Button>
         {methodForms}
 
-        <Button variant="primary" type="submit" disabled={disableButton}>
-          {disableButton ? (
+        <Button variant="primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
             <Spinner
               as="span"
               animation="border"
               role="status"
               aria-hidden="true"
             />
+          ) : edit ? (
+            "Update Recipe"
           ) : (
             "Create Recipe"
           )}
@@ -385,6 +332,14 @@ function RecipeFormPage({ edit = false, history, loggedIn, match, user }: Recipe
       </Form>
     </div>
   );
+}
+
+function toDifficultyValue(value: number): RecipeFormValues["difficulty"] {
+  if (value >= 1 && value <= 5) {
+    return String(value) as RecipeFormValues["difficulty"];
+  }
+
+  return "1";
 }
 
 function getResponseStatus(error: unknown) {
