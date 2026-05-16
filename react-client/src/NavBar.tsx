@@ -1,42 +1,43 @@
-import React, { Component } from "react";
+import React from "react";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Button from "react-bootstrap/Button";
-import { Link } from "react-router-dom";
-import { withRouter } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { logout } from "./api/client";
+import type { AuthViewState } from "./App";
 
-class NavBar extends Component {
-  constructor(props) {
-    super(props);
-    this.handleSignOut = this.handleSignOut.bind(this);
-  }
+type NavBarProps = {
+  loggedIn: boolean;
+  user: string;
+  login: (state: AuthViewState) => void;
+};
 
-  handleSignOut() {
-    let self = this;
+function NavBar({ loggedIn, user, login }: NavBarProps) {
+  const history = useHistory();
+
+  const handleSignOut = () => {
     logout()
-      .then((response) => {
-        self.props.login({ loggedIn: false, username: "" });
-        this.props.history.push("/");
+      .then(() => {
+        login({ loggedIn: false, username: "" });
+        history.push("/");
       })
       .catch(function (error) {
         // handle error
         console.log(error);
       });
-  }
-  render() {
-    let { loggedIn, user } = this.props;
-    return (
-      <div className="NavBar">
-        <Navbar expand="lg" variant="light">
-          <Navbar.Brand>
-            <Link to="/" className="brand-mark">
-              <span>T4F</span>
-              Thoughts for Food
-            </Link>
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="main-navigation" />
-          <Navbar.Collapse id="main-navigation">
+  };
+
+  return (
+    <div className="NavBar">
+      <Navbar expand="lg" variant="light">
+        <Navbar.Brand>
+          <Link to="/" className="brand-mark">
+            <span>T4F</span>
+            Thoughts for Food
+          </Link>
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="main-navigation" />
+        <Navbar.Collapse id="main-navigation">
           <Nav className="mr-auto">
             <Nav.Link>
               <Link to="/About">About</Link>
@@ -58,9 +59,9 @@ class NavBar extends Component {
           {loggedIn ? (
             <Nav className="ml-auto">
               <Nav.Link>
-                <Link to={`/Users/${this.props.user}`}> {user}</Link>
+                <Link to={`/Users/${user}`}> {user}</Link>
               </Nav.Link>
-              <Button onClick={this.handleSignOut} className="btn-ghost">
+              <Button onClick={handleSignOut} className="btn-ghost">
                 Sign Out
               </Button>
             </Nav>
@@ -70,15 +71,17 @@ class NavBar extends Component {
                 <Link to="/Login"> Log In</Link>
               </Nav.Link>
               <Nav.Link>
-                <Link to="/Signup" className="nav-pill"> Sign Up</Link>
+                <Link to="/Signup" className="nav-pill">
+                  {" "}
+                  Sign Up
+                </Link>
               </Nav.Link>
             </Nav>
           )}
-          </Navbar.Collapse>
-        </Navbar>
-      </div>
-    );
-  }
+        </Navbar.Collapse>
+      </Navbar>
+    </div>
+  );
 }
 
-export default withRouter(NavBar);
+export default NavBar;
