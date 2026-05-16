@@ -28,6 +28,10 @@ These are not the shapes I would choose for a brand-new API, but keeping them
 for now lets the backend change without forcing a full frontend rewrite in the
 same step.
 
+Clean `/api/v1/*` routes now exist beside the legacy routes. Those routes use
+JSON response envelopes and `id` fields instead of `_id`, which gives the
+frontend a migration target without breaking the current UI.
+
 ## Current Error Shape
 
 Most structured errors return:
@@ -88,12 +92,32 @@ Example:
 GET /recipes?search=pizza&difficulty=3&maxPrepTime=60&tag=italian&limit=10&offset=0
 ```
 
+The same search params are available on:
+
+```txt
+GET /api/v1/recipes
+```
+
+The v1 route returns:
+
+```json
+{
+  "data": [
+    {
+      "id": "recipe-id",
+      "name": "Pizza",
+      "author": "ammar"
+    }
+  ]
+}
+```
+
 ## Future v2 Contract
 
 A cleaner future contract would likely change:
 
-- `_id` to `id`
-- plain-text responses to JSON objects
+- remove legacy `_id` routes once the frontend has moved to `/api/v1`
+- remove plain-text legacy responses once the frontend no longer uses them
 - username-only ownership references to richer user summaries
 - route casing from `/Recipes` frontend paths to lowercase API conventions only
 - legacy auth aliases to be replaced by the explicit `/auth/*` contract

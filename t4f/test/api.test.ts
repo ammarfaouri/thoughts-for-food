@@ -72,6 +72,17 @@ describe("API", () => {
     expect(response.body.components.schemas).toHaveProperty("Recipe");
   });
 
+  it("exposes basic HTTP metrics", async () => {
+    const app = createTestApp();
+
+    await request(app).get("/health").expect(200);
+    const response = await request(app).get("/metrics").expect(200);
+
+    expect(response.text).toContain("t4f_http_requests_total");
+    expect(response.text).toContain('method="GET"');
+    expect(response.text).toContain('status="200"');
+  });
+
   it("returns a structured 404 for unknown routes", async () => {
     const response = await request(createTestApp())
       .get("/missing")
@@ -136,6 +147,52 @@ describe("API", () => {
       difficulty: 3,
       tags: ["dinner", "italian"],
     });
+  });
+
+  it("exposes clean v1 JSON recipe responses alongside legacy routes", async () => {
+    const agent = request.agent(createTestApp());
+
+    const registerResponse = await agent
+      .post("/api/v1/auth/register")
+      .send(userPayload)
+      .expect(201);
+
+    const accessToken = registerResponse.body.data.accessToken as string;
+
+    const created = await agent
+      .post("/api/v1/recipes")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(recipePayload)
+      .expect(201);
+
+    expect(created.body.data).toMatchObject({
+      id: expect.any(String),
+      name: "Pizza",
+      author: "ammar",
+      tags: ["dinner", "italian"],
+    });
+    expect(created.body.data._id).toBeUndefined();
+
+    const recipe = await agent.get(`/api/v1/recipes/${created.body.data.id}`).expect(200);
+
+    expect(recipe.body.data).toMatchObject({
+      id: created.body.data.id,
+      name: "Pizza",
+      author: "ammar",
+    });
+
+    const updated = await agent
+      .put(`/api/v1/recipes/${created.body.data.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ ...recipePayload, name: "Updated Pizza" })
+      .expect(200);
+
+    expect(updated.body.data.name).toBe("Updated Pizza");
+
+    await agent
+      .delete(`/api/v1/recipes/${created.body.data.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(204);
   });
 
   it("filters recipe lists by query params", async () => {

@@ -133,12 +133,18 @@ npm run test:db
 - CI pipeline for backend and frontend checks.
 - Database-backed repository tests.
 - Search/filtering with tag support.
+- Clean `/api/v1/*` routes exist beside legacy routes for future frontend
+  migration.
 - Request IDs are returned in `x-request-id`, included in error responses, and
   attached to HTTP logs.
 - Environment configuration is validated at startup, with production checks for
   required secrets.
 - Logs are structured with Pino and redact auth/cookie headers.
 - ESLint, Prettier, lint-staged, and Husky keep backend commits consistent.
+- `/metrics` exposes simple Prometheus-style HTTP request counters.
+- A production Dockerfile exists for backend image builds.
+- Expired refresh tokens can be cleaned with `npm run auth:cleanup-refresh-tokens`.
+- Database test reset code refuses to run when `NODE_ENV=production`.
 
 ## Remaining Backend Work
 

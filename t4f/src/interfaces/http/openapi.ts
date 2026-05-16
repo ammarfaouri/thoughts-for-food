@@ -51,6 +51,22 @@ export const openApiDocument = {
         },
       },
     },
+    "/metrics": {
+      get: {
+        tags: ["System"],
+        summary: "Prometheus-style HTTP metrics",
+        responses: {
+          "200": {
+            description: "Plain text HTTP counters",
+            content: {
+              "text/plain": {
+                schema: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/users": {
       post: {
         tags: ["Users"],

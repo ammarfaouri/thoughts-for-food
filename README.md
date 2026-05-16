@@ -109,7 +109,15 @@ Useful backend endpoints:
 ```txt
 GET /health
 GET /ready
+GET /metrics
 GET /openapi.json
+```
+
+Build a production backend image:
+
+```bash
+cd t4f
+docker build -t thoughts-for-food-api .
 ```
 
 ## Running The Frontend
@@ -142,6 +150,7 @@ npm run build
 npm test
 npm run test:db
 npm audit --omit=dev
+npm run auth:cleanup-refresh-tokens
 ```
 
 Backend commits run a lightweight pre-commit hook through Husky and lint-staged.
@@ -178,6 +187,10 @@ The backend validates configuration at startup. In production,
 The backend preserves the original route surface where useful, while also
 providing explicit `/auth/*` routes.
 
+New backend work should prefer `/api/v1/*` routes. Those routes return modern
+JSON envelopes with `id` fields and `data` wrappers, while the legacy routes
+remain available for the current frontend.
+
 ### Recipes
 
 | Method | Route |
@@ -188,6 +201,11 @@ providing explicit `/auth/*` routes.
 | `GET` | `/recipes/:id` |
 | `PUT` | `/recipes/:id` |
 | `DELETE` | `/recipes/:id` |
+| `GET` | `/api/v1/recipes` |
+| `POST` | `/api/v1/recipes` |
+| `GET` | `/api/v1/recipes/:id` |
+| `PUT` | `/api/v1/recipes/:id` |
+| `DELETE` | `/api/v1/recipes/:id` |
 
 ### Auth
 
@@ -198,6 +216,11 @@ providing explicit `/auth/*` routes.
 | `POST` | `/auth/refresh` |
 | `POST` | `/auth/logout` |
 | `GET` | `/auth/me` |
+| `POST` | `/api/v1/auth/register` |
+| `POST` | `/api/v1/auth/login` |
+| `POST` | `/api/v1/auth/refresh` |
+| `POST` | `/api/v1/auth/logout` |
+| `GET` | `/api/v1/auth/me` |
 
 ### Users
 
@@ -205,6 +228,7 @@ providing explicit `/auth/*` routes.
 | --- | --- |
 | `POST` | `/users` |
 | `GET` | `/users/:username` |
+| `GET` | `/api/v1/users/:username` |
 
 Recipe responses still include legacy-compatible fields such as `_id` and
 plain `author` usernames. This kept the frontend migration smaller while the

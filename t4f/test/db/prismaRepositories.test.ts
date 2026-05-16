@@ -244,4 +244,29 @@ describe("Prisma repositories", () => {
       revokedAt: expect.any(Date),
     });
   });
+
+  it("deletes expired refresh tokens", async () => {
+    const author = await users.create(userInput);
+    const expiredAt = new Date(Date.now() - 60_000);
+    const activeUntil = new Date(Date.now() + 60_000);
+
+    await refreshTokens.create({
+      userId: author.id,
+      tokenHash: "expired-token-hash",
+      familyId: "expired-family",
+      expiresAt: expiredAt,
+    });
+    await refreshTokens.create({
+      userId: author.id,
+      tokenHash: "active-token-hash",
+      familyId: "active-family",
+      expiresAt: activeUntil,
+    });
+
+    await expect(refreshTokens.deleteExpired(new Date())).resolves.toBe(1);
+    await expect(refreshTokens.findByTokenHash("expired-token-hash")).resolves.toBeNull();
+    await expect(
+      refreshTokens.findByTokenHash("active-token-hash"),
+    ).resolves.toMatchObject({ tokenHash: "active-token-hash" });
+  });
 });

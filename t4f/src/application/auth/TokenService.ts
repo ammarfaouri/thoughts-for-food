@@ -107,6 +107,10 @@ export class TokenService {
     }
   }
 
+  cleanupExpiredRefreshTokens(before = new Date()): Promise<number> {
+    return this.refreshTokens.deleteExpired(before);
+  }
+
   private issueAccessToken(user: AuthenticatedUser) {
     const payload: AccessTokenPayload = {
       sub: user.id,
