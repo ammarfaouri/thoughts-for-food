@@ -32,9 +32,9 @@ class App extends Component {
   componentDidMount() {
     let self = this;
     refreshAuth()
-      .then((response) =>
+      .then((auth) =>
         self.setState({
-          username: response.data.user.username,
+          username: auth.user.username,
           loggedIn: true,
           authReady: true,
         })

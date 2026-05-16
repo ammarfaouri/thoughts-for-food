@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 class MiniRecipe extends Component {
   render() {
-    let { name, author, description, _id } = this.props.recipe;
+    let { name, author, description, id } = this.props.recipe;
     return (
       <Card className="MiniRecipe">
         <Card.Img
@@ -16,7 +16,7 @@ class MiniRecipe extends Component {
         <Card.Body>
           <span className="recipe-chip">Recipe</span>
           <Card.Title>
-            <Link to={`/Recipes/${_id}`}>{name}</Link>
+            <Link to={`/Recipes/${id}`}>{name}</Link>
           </Card.Title>
           <Card.Subtitle className="recipe-author">
             By

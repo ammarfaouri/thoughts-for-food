@@ -30,56 +30,63 @@ export function getAccessToken() {
 }
 
 export function getMe() {
-  return http.get("/auth/me");
+  return http.get("/api/auth/me").then(unwrapData);
 }
 
 export function refreshAuth() {
-  return http.post("/auth/refresh").then((response) => {
-    setAccessToken(response.data.accessToken);
-    return response;
+  return http.post("/api/auth/refresh").then((response) => {
+    const data = unwrapData(response);
+    setAccessToken(data.accessToken);
+    return data;
   });
 }
 
 export function login(credentials) {
-  return http.post("/auth/login", credentials).then((response) => {
-    setAccessToken(response.data.accessToken);
-    return response;
+  return http.post("/api/auth/login", credentials).then((response) => {
+    const data = unwrapData(response);
+    setAccessToken(data.accessToken);
+    return data;
   });
 }
 
 export function logout() {
-  return http.post("/auth/logout").finally(() => {
+  return http.post("/api/auth/logout").finally(() => {
     clearAccessToken();
   });
 }
 
 export function signUp(user) {
-  return http.post("/auth/register", user).then((response) => {
-    setAccessToken(response.data.accessToken);
-    return response;
+  return http.post("/api/auth/register", user).then((response) => {
+    const data = unwrapData(response);
+    setAccessToken(data.accessToken);
+    return data;
   });
 }
 
 export function getUserProfile(username) {
-  return http.get(`/users/${username}`);
+  return http.get(`/api/users/${username}`).then(unwrapData);
 }
 
 export function getRecipes() {
-  return http.get("/recipes");
+  return http.get("/api/recipes").then(unwrapData);
 }
 
 export function getRecipe(id) {
-  return http.get(`/recipes/${id}`);
+  return http.get(`/api/recipes/${id}`).then(unwrapData);
 }
 
 export function createRecipe(recipe) {
-  return http.post("/recipes", recipe);
+  return http.post("/api/recipes", recipe).then(unwrapData);
 }
 
 export function updateRecipe(id, recipe) {
-  return http.put(`/recipes/${id}`, recipe);
+  return http.put(`/api/recipes/${id}`, recipe).then(unwrapData);
 }
 
 export function deleteRecipe(id) {
-  return http.delete(`/recipes/${id}`);
+  return http.delete(`/api/recipes/${id}`);
+}
+
+function unwrapData(response) {
+  return response.data.data;
 }

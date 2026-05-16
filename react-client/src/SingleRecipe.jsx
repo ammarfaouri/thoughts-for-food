@@ -38,7 +38,7 @@ class SingleRecipe extends Component {
     this.setState({ responseStatus: "", disableButton: true });
 
     deleteRecipe(self.props.match.params.id)
-      .then(function (response) {
+      .then(function () {
         self.setState({ showModal: false }, () =>
           self.props.history.push("/Recipes")
         );
@@ -54,17 +54,16 @@ class SingleRecipe extends Component {
 
   componentDidMount() {
     getRecipe(this.props.match.params.id)
-      .then((response) => {
-        let { data } = response;
+      .then((recipe) => {
         this.setState({
-          name: data.name,
-          author: data.author,
-          description: data.description,
-          prepTime: data.prepTime,
-          difficulty: data.difficulty,
-          ingredients: data.ingredients,
-          method: data.method,
-          editAndDelete: this.props.user === data.author,
+          name: recipe.name,
+          author: recipe.author,
+          description: recipe.description,
+          prepTime: recipe.prepTime,
+          difficulty: recipe.difficulty,
+          ingredients: recipe.ingredients,
+          method: recipe.method,
+          editAndDelete: this.props.user === recipe.author,
         });
       })
       .catch(function (error) {

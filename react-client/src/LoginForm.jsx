@@ -35,15 +35,13 @@ class LoginForm extends Component {
         username: username,
         password: password,
       })
-        .then(function (response) {
-          if (response.status === 200) {
-            self.setState({ loggedIn: true });
-            self.props.login({
-              loggedIn: true,
-              username: response.data.user.username,
-            });
-            history.push("/");
-          }
+        .then(function (auth) {
+          self.setState({ loggedIn: true });
+          self.props.login({
+            loggedIn: true,
+            username: auth.user.username,
+          });
+          history.push("/");
         })
         .catch(function (error) {
           self.setState({ responseStatus: error.response.status });

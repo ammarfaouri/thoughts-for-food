@@ -13,7 +13,7 @@ class Recipes extends Component {
 
   componentDidMount() {
     getRecipes()
-      .then((response) => this.setState({ recipes: response.data }))
+      .then((recipes) => this.setState({ recipes }))
       .catch(function (error) {
         // handle error
         console.log(error);
@@ -21,7 +21,7 @@ class Recipes extends Component {
   }
   render() {
     let recipeList = this.state.recipes.map((recipe) => (
-      <MiniRecipe recipe={recipe} key={recipe._id} />
+      <MiniRecipe recipe={recipe} key={recipe.id} />
     ));
     return (
       <div className="Recipes">

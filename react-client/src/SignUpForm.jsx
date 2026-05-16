@@ -42,15 +42,13 @@ class SignUpForm extends Component {
         email: email,
         password: password,
       })
-        .then(function (response) {
-          if (response.status === 201) {
-            self.setState({ loggedIn: true, responseStatus: "201" });
-            self.props.login({
-              loggedIn: true,
-              username: response.data.user.username,
-            });
-            history.push(`/Users/${username}`);
-          }
+        .then(function (auth) {
+          self.setState({ loggedIn: true, responseStatus: "201" });
+          self.props.login({
+            loggedIn: true,
+            username: auth.user.username,
+          });
+          history.push(`/Users/${username}`);
         })
         .catch(function (error) {
           self.setState({

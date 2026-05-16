@@ -10,18 +10,17 @@ class Profile extends Component {
     this.state = {
       firstName: "",
       lastName: "",
-      recipesInfo: [],
+      recipes: [],
     };
   }
   componentDidMount() {
     let self = this;
     getUserProfile(self.props.user)
-      .then((response) => {
-        let { data } = response;
+      .then((profile) => {
         self.setState({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          recipesInfo: data.recipesInfo,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          recipes: profile.recipes,
         });
       })
       .catch(function (error) {
@@ -31,8 +30,8 @@ class Profile extends Component {
   }
   render() {
     let { firstName, lastName } = this.state;
-    let recipeList = this.state.recipesInfo.map((recipe) => (
-      <MiniRecipe recipe={recipe} key={recipe._id} />
+    let recipeList = this.state.recipes.map((recipe) => (
+      <MiniRecipe recipe={recipe} key={recipe.id} />
     ));
 
     return (

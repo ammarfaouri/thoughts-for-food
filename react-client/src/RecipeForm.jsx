@@ -37,17 +37,16 @@ class RecipeForm extends Component {
       let self = this;
       let { user, match, history } = this.props;
       getRecipe(match.params.id)
-        .then((response) => {
-          let { data } = response;
-          if (data.author === user) {
+        .then((recipe) => {
+          if (recipe.author === user) {
             self.setState({
-              name: data.name,
-              author: data.author,
-              description: data.description,
-              prepTime: data.prepTime,
-              difficulty: data.difficulty,
-              ingredients: data.ingredients,
-              method: data.method,
+              name: recipe.name,
+              author: recipe.author,
+              description: recipe.description,
+              prepTime: recipe.prepTime,
+              difficulty: recipe.difficulty,
+              ingredients: recipe.ingredients,
+              method: recipe.method,
             });
           } else {
             history.push("/nicetry");
@@ -163,7 +162,7 @@ class RecipeForm extends Component {
             ingredients: ingredients,
             method: method,
         })
-          .then(function (response) {
+          .then(function () {
             history.push(`/Recipes/${match.params.id}`);
           })
           .catch(function (error) {
@@ -183,8 +182,8 @@ class RecipeForm extends Component {
             ingredients: ingredients,
             method: method,
         })
-          .then(function (response) {
-            history.push(`/Recipes/${response.data}`);
+          .then(function (recipe) {
+            history.push(`/Recipes/${recipe.id}`);
           })
           .catch(function (error) {
             self.setState({
