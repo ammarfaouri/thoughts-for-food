@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Switch, Route } from "react-router-dom";
-import NavBar from "./NavBar";
-import About from "./About";
-import Contact from "./Contact";
-import Recipes from "./Recipes";
-import SingleRecipe from "./SingleRecipe";
-import RecipeForm from "./RecipeForm";
-import SignUpForm from "./SignUpForm";
-import LoginForm from "./LoginForm";
-import Profile from "./Profile";
+import NavBar from "../shared/layout/NavBar";
+import AboutPage from "../features/marketing/AboutPage";
+import ContactPage from "../features/marketing/ContactPage";
+import HomePage from "../features/marketing/HomePage";
+import LoginPage from "../features/auth/LoginPage";
+import SignUpPage from "../features/auth/SignUpPage";
+import RecipesPage from "../features/recipes/RecipesPage";
+import RecipeDetailPage from "../features/recipes/RecipeDetailPage";
+import RecipeFormPage from "../features/recipes/RecipeFormPage";
+import ProfilePage from "../features/users/ProfilePage";
 
-import Home from "./Home";
-import "./App.css";
-import "./Home.css";
-import { clearAccessToken, refreshAuth } from "./api/client";
+import "../App.css";
+import "../Home.css";
+import { clearAccessToken, refreshAuth } from "../api/client";
 
 export type AuthViewState = {
   loggedIn: boolean;
@@ -47,27 +47,27 @@ function App() {
     <div className="App">
       <NavBar loggedIn={loggedIn} user={username} login={setAuthState} />
       <Switch>
-        <Route exact path="/About" render={() => <About />} />
-        <Route exact path="/Contact" render={() => <Contact />} />
+        <Route exact path="/About" render={() => <AboutPage />} />
+        <Route exact path="/Contact" render={() => <ContactPage />} />
         <Route
           exact
           path="/Recipes/New"
           render={(routeParams) => (
-            <RecipeForm loggedIn={loggedIn} user={username} {...routeParams} />
+            <RecipeFormPage loggedIn={loggedIn} user={username} {...routeParams} />
           )}
         />
         <Route
           exact
           path="/Recipes/:id"
           render={(routeParams) => (
-            <SingleRecipe user={username} {...routeParams} />
+            <RecipeDetailPage user={username} {...routeParams} />
           )}
         />
         <Route
           exact
           path="/Recipes/:id/edit"
           render={(routeParams) => (
-            <RecipeForm
+            <RecipeFormPage
               loggedIn={loggedIn}
               user={username}
               edit
@@ -80,7 +80,7 @@ function App() {
           exact
           path="/Signup"
           render={(routeParams) => (
-            <SignUpForm
+            <SignUpPage
               loggedIn={loggedIn}
               login={setAuthState}
               {...routeParams}
@@ -91,7 +91,7 @@ function App() {
           exact
           path="/Login"
           render={(routeParams) => (
-            <LoginForm
+            <LoginPage
               loggedIn={loggedIn}
               login={setAuthState}
               {...routeParams}
@@ -102,12 +102,12 @@ function App() {
           exact
           path="/Users/:username"
           render={(routeParams) => (
-            <Profile user={routeParams.match.params.username} {...routeParams} />
+            <ProfilePage user={routeParams.match.params.username} {...routeParams} />
           )}
         />
-        <Route exact path="/Recipes" render={() => <Recipes />} />
+        <Route exact path="/Recipes" render={() => <RecipesPage />} />
 
-        <Route exact path="/" render={() => <Home />} />
+        <Route exact path="/" render={() => <HomePage />} />
       </Switch>
     </div>
   );

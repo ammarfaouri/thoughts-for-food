@@ -1,6 +1,6 @@
 import React from "react";
 
-function About() {
+function AboutPage() {
   return (
     <div className="About">
       <div className="split-page">
@@ -22,4 +22,4 @@ function About() {
   );
 }
 
-export default About;
+export default AboutPage;

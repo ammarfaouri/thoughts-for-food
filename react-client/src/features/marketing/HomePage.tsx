@@ -2,7 +2,7 @@ import React from "react";
 import Button from "react-bootstrap/Button";
 import { Link } from "react-router-dom";
 
-function Home() {
+function HomePage() {
   return (
     <div className="Home">
       <section className="home-hero">
@@ -41,4 +41,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default HomePage;

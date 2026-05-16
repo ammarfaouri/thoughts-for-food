@@ -3,8 +3,8 @@ import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Button from "react-bootstrap/Button";
 import { Link, useHistory } from "react-router-dom";
-import { logout } from "./api/client";
-import type { AuthViewState } from "./App";
+import { logout } from "../../api/client";
+import type { AuthViewState } from "../../app/App";
 
 type NavBarProps = {
   loggedIn: boolean;

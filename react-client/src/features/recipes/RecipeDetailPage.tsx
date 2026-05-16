@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { Link, type RouteComponentProps } from "react-router-dom";
@@ -7,34 +7,26 @@ import Alert from "react-bootstrap/Alert";
 import Spinner from "react-bootstrap/Spinner";
 import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
-import { deleteRecipe, getRecipe } from "./api/client";
-import type { Recipe } from "./api/types";
+import { useDeleteRecipeMutation, useRecipeQuery } from "./recipeQueries";
 
 type RecipeRouteParams = {
   id: string;
 };
 
-type SingleRecipeProps = RouteComponentProps<RecipeRouteParams> & {
+type RecipeDetailPageProps = RouteComponentProps<RecipeRouteParams> & {
   user: string;
 };
 
-function SingleRecipe({ history, match, user }: SingleRecipeProps) {
+function RecipeDetailPage({ history, match, user }: RecipeDetailPageProps) {
   const recipeId = match.params.id;
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const {
+    data: recipe,
+    isError,
+    isLoading,
+  } = useRecipeQuery(recipeId);
+  const deleteRecipeMutation = useDeleteRecipeMutation();
   const [showModal, setShowModal] = useState(false);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
-  const [disableButton, setDisableButton] = useState(false);
-
-  useEffect(() => {
-    getRecipe(recipeId)
-      .then((recipe) => {
-        setRecipe(recipe);
-      })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-      });
-  }, [recipeId]);
 
   const toggleModal = () => {
     setShowModal((currentShowModal) => !currentShowModal);
@@ -42,16 +34,14 @@ function SingleRecipe({ history, match, user }: SingleRecipeProps) {
 
   const handleDelete = async () => {
     setResponseStatus(null);
-    setDisableButton(true);
 
     try {
-      await deleteRecipe(recipeId);
+      await deleteRecipeMutation.mutateAsync(recipeId);
       setShowModal(false);
       history.push("/Recipes");
     } catch (error) {
       console.log(error);
       setResponseStatus(getResponseStatus(error));
-      setDisableButton(false);
     }
   };
 
@@ -92,6 +82,12 @@ function SingleRecipe({ history, match, user }: SingleRecipeProps) {
         />
         <Card.Body>
           <span className="recipe-chip">Recipe detail</span>
+          {isLoading ? <Spinner animation="border" role="status" /> : null}
+          {isError ? (
+            <Alert variant="danger">
+              Recipe could not be loaded at the moment
+            </Alert>
+          ) : null}
           <Card.Title>{name}</Card.Title>
           <Card.Subtitle className="mb-2 text-muted">
             By
@@ -142,8 +138,12 @@ function SingleRecipe({ history, match, user }: SingleRecipeProps) {
           <Button variant="secondary" onClick={toggleModal}>
             Cancel
           </Button>
-          <Button variant="danger" disabled={disableButton} onClick={handleDelete}>
-            {disableButton ? (
+          <Button
+            variant="danger"
+            disabled={deleteRecipeMutation.isLoading}
+            onClick={handleDelete}
+          >
+            {deleteRecipeMutation.isLoading ? (
               <Spinner
                 as="span"
                 animation="border"
@@ -168,4 +168,4 @@ function getResponseStatus(error: unknown) {
   return null;
 }
 
-export default SingleRecipe;
+export default RecipeDetailPage;

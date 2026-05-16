@@ -1,13 +1,13 @@
 import React from "react";
 import Card from "react-bootstrap/Card";
 import { Link } from "react-router-dom";
-import type { RecipeSummary } from "./api/types";
+import type { RecipeSummary } from "../../../api/types";
 
-type MiniRecipeProps = {
+type RecipeCardProps = {
   recipe: RecipeSummary;
 };
 
-function MiniRecipe({ recipe }: MiniRecipeProps) {
+function RecipeCard({ recipe }: RecipeCardProps) {
   const { name, author, description, id } = recipe;
 
   return (
@@ -33,4 +33,4 @@ function MiniRecipe({ recipe }: MiniRecipeProps) {
   );
 }
 
-export default MiniRecipe;
+export default RecipeCard;

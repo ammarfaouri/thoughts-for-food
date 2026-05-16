@@ -4,25 +4,26 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import { type RouteComponentProps } from "react-router-dom";
-import { login } from "./api/client";
+import { login } from "../../api/client";
+import type { AuthViewState } from "../../app/App";
 
-type LoginFormProps = RouteComponentProps & {
+type LoginPageProps = RouteComponentProps & {
   loggedIn: boolean;
-  login: (state: { loggedIn: boolean; username: string }) => void;
+  login: (state: AuthViewState) => void;
 };
 
-type LoginFormState = {
+type LoginPageFormState = {
   username: string;
   password: string;
 };
 
-const initialFormState: LoginFormState = {
+const initialFormState: LoginPageFormState = {
   username: "",
   password: "",
 };
 
-function LoginForm({ history, loggedIn, login: setLoginState }: LoginFormProps) {
-  const [form, setForm] = useState<LoginFormState>(initialFormState);
+function LoginPage({ history, loggedIn, login: setLoginState }: LoginPageProps) {
+  const [form, setForm] = useState<LoginPageFormState>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const [validated, setValidated] = useState(false);
 
@@ -119,4 +120,4 @@ function getResponseStatus(error: unknown) {
   return null;
 }
 
-export default LoginForm;
+export default LoginPage;

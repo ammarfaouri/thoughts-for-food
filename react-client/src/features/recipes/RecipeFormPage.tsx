@@ -6,14 +6,17 @@ import Col from "react-bootstrap/Col";
 import Alert from "react-bootstrap/Alert";
 import Spinner from "react-bootstrap/Spinner";
 import { type RouteComponentProps } from "react-router-dom";
-import { createRecipe, getRecipe, updateRecipe } from "./api/client";
-import type { Ingredient } from "./api/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { createRecipe, getRecipe, updateRecipe } from "../../api/client";
+import type { Ingredient } from "../../api/types";
+import { recipeKeys } from "./recipeQueries";
+import { userKeys } from "../users/userQueries";
 
 type RecipeRouteParams = {
   id?: string;
 };
 
-type RecipeFormProps = RouteComponentProps<RecipeRouteParams> & {
+type RecipeFormPageProps = RouteComponentProps<RecipeRouteParams> & {
   loggedIn: boolean;
   user: string;
   edit?: boolean;
@@ -39,7 +42,8 @@ const initialFormState: RecipeFormState = {
   method: [""],
 };
 
-function RecipeForm({ edit = false, history, loggedIn, match, user }: RecipeFormProps) {
+function RecipeFormPage({ edit = false, history, loggedIn, match, user }: RecipeFormPageProps) {
+  const queryClient = useQueryClient();
   const [form, setForm] = useState<RecipeFormState>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const [validated, setValidated] = useState(false);
@@ -167,10 +171,15 @@ function RecipeForm({ edit = false, history, loggedIn, match, user }: RecipeForm
 
     try {
       if (edit && recipeId) {
-        await updateRecipe(recipeId, form);
+        const recipe = await updateRecipe(recipeId, form);
+        queryClient.setQueryData(recipeKeys.detail(recipeId), recipe);
+        queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile(recipe.author) });
         history.push(`/Recipes/${recipeId}`);
       } else {
         const recipe = await createRecipe({ ...form, author: user });
+        queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile(recipe.author) });
         history.push(`/Recipes/${recipe.id}`);
       }
     } catch (error) {
@@ -386,4 +395,4 @@ function getResponseStatus(error: unknown) {
   return null;
 }
 
-export default RecipeForm;
+export default RecipeFormPage;

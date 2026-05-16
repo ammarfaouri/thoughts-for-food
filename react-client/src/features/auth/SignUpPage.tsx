@@ -5,12 +5,13 @@ import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import Spinner from "react-bootstrap/Spinner";
 import { type RouteComponentProps } from "react-router-dom";
-import { signUp } from "./api/client";
-import type { RegisterUserInput } from "./api/types";
+import { signUp } from "../../api/client";
+import type { AuthViewState } from "../../app/App";
+import type { RegisterUserInput } from "../../api/types";
 
-type SignUpFormProps = RouteComponentProps & {
+type SignUpPageProps = RouteComponentProps & {
   loggedIn: boolean;
-  login: (state: { loggedIn: boolean; username: string }) => void;
+  login: (state: AuthViewState) => void;
 };
 
 const initialFormState: RegisterUserInput = {
@@ -21,7 +22,7 @@ const initialFormState: RegisterUserInput = {
   password: "",
 };
 
-function SignUpForm({ history, loggedIn, login: setLoginState }: SignUpFormProps) {
+function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps) {
   const [form, setForm] = useState<RegisterUserInput>(initialFormState);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
   const [validated, setValidated] = useState(false);
@@ -181,4 +182,4 @@ function getResponseStatus(error: unknown) {
   return null;
 }
 
-export default SignUpForm;
+export default SignUpPage;
