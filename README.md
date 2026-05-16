@@ -1,27 +1,35 @@
-# 🍽️ Thoughts for Food
+# Thoughts for Food
 
-> A modernized recipe-sharing application with a production-oriented TypeScript backend, PostgreSQL persistence, JWT authentication, and a legacy-compatible React frontend.
+Thoughts for Food is a full-stack recipe-sharing app that started as a first
+coding project and has been modernized into a backend-focused portfolio project.
 
----
+Users can register, log in, browse recipes, search/filter recipes, publish their
+own recipes, edit/delete recipes they own, and view public author profiles.
 
-## ✨ Overview
+## Current Focus
 
-**Thoughts for Food** is a full-stack recipe-sharing application where users can:
+The main value of this version is the backend modernization:
 
-- 🧑‍🍳 Create an account
-- 🔐 Log in securely
-- 🔎 Browse and search recipes
-- 📝 Publish their own recipes
-- ✏️ Edit and delete recipes they own
-- 👤 View recipe author profiles
+- TypeScript Express API
+- PostgreSQL persistence with Prisma
+- migration-based schema management
+- lightweight hexagonal architecture
+- JWT access tokens with rotating refresh tokens
+- Zod request validation
+- structured errors with request IDs
+- Pino structured logging
+- health/readiness routes
+- OpenAPI contract at `/openapi.json`
+- unit, HTTP, and database-backed tests
+- GitHub Actions CI
 
-The project began as a first full-stack application and has since been modernized to demonstrate a cleaner, more production-ready backend architecture while preserving compatibility with the original frontend experience.
+The frontend is still intentionally closer to the original app, with Vite and
+auth compatibility updates added so it can run on modern Node and talk to the
+new backend.
 
----
+## Tech Stack
 
-## 🧰 Tech Stack
-
-### 🖥️ Backend
+### Backend
 
 | Area | Technology |
 | --- | --- |
@@ -31,65 +39,52 @@ The project began as a first full-stack application and has since been modernize
 | ORM | Prisma |
 | Validation | Zod |
 | Authentication | JWT access tokens + rotating refresh tokens |
-| Password Security | bcrypt |
-| Testing | Vitest |
-| Local Infrastructure | Docker Compose |
+| Password security | bcrypt |
+| Logging | Pino / pino-http |
+| Testing | Vitest, Supertest |
+| Local infrastructure | Docker Compose |
 
-### 🎨 Frontend
+### Frontend
 
 | Area | Technology |
 | --- | --- |
-| UI Library | React 16 |
-| Build Tool | Vite |
+| UI library | React 16 |
+| Build tool | Vite |
 | Routing | React Router v5 |
 | Components | React Bootstrap |
-| HTTP Client | Axios 1.x |
+| HTTP client | Axios |
 | Testing | Vitest |
 
-> The frontend is still largely the original React implementation, but the build tooling has been migrated from Create React App to **Vite**, allowing it to run cleanly on modern Node versions.
+## Backend Architecture
 
----
-
-## 🏗️ Backend Architecture
-
-The backend follows a lightweight **hexagonal / clean architecture** style.
+The backend uses a lightweight hexagonal / clean architecture shape:
 
 ```txt
 t4f/src
-├── domain/           Core recipe and user types plus repository contracts
-├── application/      Auth, user profile, and recipe use cases
-├── infrastructure/   Prisma client and repository implementations
-├── interfaces/http/  Express routes, middleware, validation, serializers
-└── config/           Environment parsing
+|-- domain/           Core types and repository contracts
+|-- application/      Auth, recipe, and profile use cases
+|-- infrastructure/   Prisma client, logger, repository implementations
+|-- interfaces/http/  Express routes, middleware, validation, serializers
+|-- config/           Environment parsing and validation
+`-- shared/           Shared application errors
 ```
 
-### Architectural Boundary
+The important boundary is dependency direction:
 
-The key design decision is that application services depend on **repository interfaces**, not directly on Express or Prisma.
+```txt
+HTTP -> application -> domain contracts <- infrastructure
+```
 
-That means:
+Application services do not import Express or Prisma. Express is treated as an
+HTTP adapter, and Prisma is treated as a persistence adapter.
 
-- Express is treated as an HTTP adapter.
-- Prisma is treated as a persistence adapter.
-- Business/application logic stays framework-independent.
-- Repository contracts sit at the boundary between the core and infrastructure.
-
-This keeps the backend easier to test, reason about, and evolve.
-
-📚 More detailed backend reasoning is documented in:
+More backend reasoning:
 
 - [Backend Modernization Notes](docs/backend-modernization.md)
-- [API Contract and Compatibility Notes](docs/api-contract.md)
+- [API Contract Notes](docs/api-contract.md)
+- [Backend Portfolio Notes](docs/backend-portfolio-notes.md)
 
-The live OpenAPI document is exposed by the backend at:
-
-```http
-GET /openapi.json
-```
-
----
-
-## 🚀 Running the Backend
+## Running The Backend
 
 From the backend directory:
 
@@ -103,85 +98,96 @@ npm run prisma:seed
 npm run dev
 ```
 
-The API will be available at:
+The API runs at:
 
 ```txt
 http://localhost:5000
 ```
 
----
+Useful backend endpoints:
 
-## 🧪 Useful Commands
+```txt
+GET /health
+GET /ready
+GET /openapi.json
+```
 
-### Backend
+## Running The Frontend
+
+From the frontend directory:
+
+```bash
+cd react-client
+npm install
+npm run dev
+```
+
+Vite will print the local URL, usually:
+
+```txt
+http://localhost:5173
+```
+
+## Useful Commands
+
+Backend:
 
 ```bash
 cd t4f
+npm run prisma:generate
+npm run format:check
+npm run lint
+npm run typecheck
+npm run build
 npm test
 npm run test:db
-npm run build
-npm run prisma:generate
+npm audit --omit=dev
 ```
 
-### Frontend
+Backend commits run a lightweight pre-commit hook through Husky and lint-staged.
+It formats and lints staged backend files only; full tests remain manual/CI
+checks so local commits stay fast.
+
+Frontend:
 
 ```bash
 cd react-client
 npm test
 npm run build
-npm run dev
 ```
 
----
+## Environment Variables
 
-## ✅ Continuous Integration
+Backend configuration lives in `t4f/.env`.
 
-GitHub Actions runs backend and frontend quality gates on pushes to `master` / `main` and on pull requests.
+```txt
+DATABASE_URL
+PORT
+JWT_ACCESS_SECRET
+JWT_ACCESS_TTL
+JWT_REFRESH_TTL_DAYS
+NODE_ENV
+LOG_LEVEL
+```
 
-### Backend CI
+The backend validates configuration at startup. In production,
+`DATABASE_URL` and `JWT_ACCESS_SECRET` must be explicitly set.
 
-The backend workflow:
+## API Compatibility
 
-- 📦 Installs dependencies with `npm ci`
-- 🧬 Generates the Prisma client
-- 🗄️ Applies migrations to a PostgreSQL service
-- ⚡ Runs fast tests
-- 🧪 Runs database-backed repository tests
-- 🏗️ Builds TypeScript
-- 🔍 Audits production dependencies
-
-### Frontend CI
-
-The frontend workflow:
-
-- 📦 Installs dependencies with `npm ci`
-- 🧪 Runs the Vitest smoke test
-- 🏗️ Builds the Vite app
-- 🔍 Audits production dependencies
-
----
-
-## 🔌 API Compatibility
-
-The backend still exposes the original route surface for compatibility with the legacy frontend.
+The backend preserves the original route surface where useful, while also
+providing explicit `/auth/*` routes.
 
 ### Recipes
 
 | Method | Route |
 | --- | --- |
 | `GET` | `/recipes` |
-| `GET` | `/recipes?search=&difficulty=&maxPrepTime=&author=&limit=&offset=` |
+| `GET` | `/recipes?search=&difficulty=&maxPrepTime=&author=&tag=&limit=&offset=` |
 | `POST` | `/recipes` |
 | `GET` | `/recipes/:id` |
 | `PUT` | `/recipes/:id` |
 | `DELETE` | `/recipes/:id` |
-
-### Users
-
-| Method | Route |
-| --- | --- |
-| `POST` | `/users` |
-| `GET` | `/users/:username` |
 
 ### Auth
 
@@ -193,51 +199,63 @@ The backend still exposes the original route surface for compatibility with the 
 | `POST` | `/auth/logout` |
 | `GET` | `/auth/me` |
 
-Recipe responses still include legacy-compatible fields such as:
+### Users
 
-```json
-{
-  "_id": "recipe-id",
-  "author": "username"
-}
+| Method | Route |
+| --- | --- |
+| `POST` | `/users` |
+| `GET` | `/users/:username` |
+
+Recipe responses still include legacy-compatible fields such as `_id` and
+plain `author` usernames. This kept the frontend migration smaller while the
+backend internals moved to PostgreSQL relations.
+
+## Authentication Model
+
+The API uses:
+
+- short-lived JWT access tokens returned in JSON
+- opaque refresh tokens in HTTP-only cookies
+- SHA-256 refresh token hashes stored in PostgreSQL
+- refresh token rotation on every refresh
+- refresh token family revocation on token reuse
+
+Protected recipe writes use:
+
+```txt
+Authorization: Bearer <accessToken>
 ```
 
-Authentication has moved to `/auth/*` token endpoints, so the current React authentication flow needs a follow-up update.
+## CI
 
----
+GitHub Actions runs backend and frontend quality gates on pull requests and
+pushes to `master` / `main`.
 
-## 🧭 Next Modernization Steps
+Backend CI:
 
-Planned improvements:
+- install dependencies with `npm ci`
+- generate Prisma client
+- apply migrations to PostgreSQL
+- run fast tests
+- run database-backed tests
+- build TypeScript
+- audit production dependencies
 
-- ⚛️ Replace class components with function components
-- 🟦 Convert the React app to TypeScript
-- 🔄 Add TanStack Query for server state
-- 🧾 Add React Hook Form + Zod for forms
-- 🖼️ Add image upload support for recipes
-- 🏷️ Add tags, favorites, comments, and advanced search filters
-- 🧪 Add end-to-end tests once the frontend is modernized
+Frontend CI:
 
----
+- install dependencies with `npm ci`
+- run tests
+- build Vite app
+- audit production dependencies
 
-## 📌 Project Status
+## Project Status
 
-The backend modernization is the main focus of the current version.
+Backend modernization is effectively wrapped. The remaining work is mostly
+product polish and frontend modernization:
 
-The project now demonstrates:
-
-- Clean backend boundaries
-- Typed request validation
-- PostgreSQL persistence
-- Prisma-backed repositories
-- JWT-based authentication
-- Rotating refresh tokens
-- Database-backed tests
-- CI quality gates
-- Legacy API compatibility
-
----
-
-## 🥘 Built with care
-
-**Thoughts for Food** is both a working recipe application and a learning project evolved into a more maintainable full-stack codebase.
+- convert the React app to TypeScript
+- replace older class components over time
+- add React Hook Form + Zod for forms
+- add TanStack Query for server state
+- add image uploads or favorites as future product features
+- eventually remove legacy API response shapes once the frontend is ready

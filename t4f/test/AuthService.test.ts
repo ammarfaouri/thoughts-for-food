@@ -2,15 +2,12 @@ import { describe, expect, it } from "vitest";
 import { AuthService } from "../src/application/auth/AuthService";
 import { RegisterUserInput, User } from "../src/domain/user/User";
 import { UserRepository } from "../src/domain/user/UserRepository";
-import { AppError } from "../src/shared/AppError";
 
 class InMemoryUserRepository implements UserRepository {
   private users: User[] = [];
 
   findByUsername(username: string) {
-    return Promise.resolve(
-      this.users.find((user) => user.username === username) ?? null,
-    );
+    return Promise.resolve(this.users.find((user) => user.username === username) ?? null);
   }
 
   findByEmail(email: string) {
@@ -66,6 +63,10 @@ describe("AuthService", () => {
 
     await expect(
       auth.register({ ...input, email: "other@example.com" }),
-    ).rejects.toMatchObject(new AppError(409, "Username already exists"));
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      code: "USERNAME_TAKEN",
+      message: "Username already exists",
+    });
   });
 });

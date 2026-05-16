@@ -11,6 +11,7 @@ const recipeInclude = {
   author: true,
   ingredients: { orderBy: { position: "asc" } },
   steps: { orderBy: { position: "asc" } },
+  tags: { include: { tag: true }, orderBy: { tag: { name: "asc" } } },
 } satisfies Prisma.RecipeInclude;
 
 type RecipeRecord = Prisma.RecipeGetPayload<{ include: typeof recipeInclude }>;
@@ -66,6 +67,7 @@ export class PrismaRecipeRepository implements RecipeRepository {
             position: index + 1,
           })),
         },
+        tags: toRecipeTagWrites(draft.tags),
       },
       include: recipeInclude,
     });
@@ -77,6 +79,7 @@ export class PrismaRecipeRepository implements RecipeRepository {
     const recipe = await this.prisma.$transaction(async (tx) => {
       await tx.recipeIngredient.deleteMany({ where: { recipeId: id } });
       await tx.recipeStep.deleteMany({ where: { recipeId: id } });
+      await tx.recipeTag.deleteMany({ where: { recipeId: id } });
 
       return tx.recipe.update({
         where: { id },
@@ -97,6 +100,7 @@ export class PrismaRecipeRepository implements RecipeRepository {
               position: index + 1,
             })),
           },
+          tags: toRecipeTagWrites(draft.tags),
         },
         include: recipeInclude,
       });
@@ -121,13 +125,39 @@ function toRecipeWhere(criteria: RecipeSearchCriteria): Prisma.RecipeWhereInput 
         }
       : {}),
     ...(criteria.difficulty ? { difficulty: criteria.difficulty } : {}),
-    ...(criteria.maxPrepTime
-      ? { prepTime: { lte: criteria.maxPrepTime } }
-      : {}),
-    ...(criteria.author
-      ? { author: { username: { equals: criteria.author } } }
+    ...(criteria.maxPrepTime ? { prepTime: { lte: criteria.maxPrepTime } } : {}),
+    ...(criteria.author ? { author: { username: { equals: criteria.author } } } : {}),
+    ...(criteria.tag
+      ? { tags: { some: { tag: { name: { equals: normalizeTag(criteria.tag) } } } } }
       : {}),
   };
+}
+
+function toRecipeTagWrites(tags: string[] | undefined) {
+  const normalizedTags = normalizeTags(tags);
+
+  if (!normalizedTags.length) {
+    return undefined;
+  }
+
+  return {
+    create: normalizedTags.map((name) => ({
+      tag: {
+        connectOrCreate: {
+          where: { name },
+          create: { name },
+        },
+      },
+    })),
+  };
+}
+
+function normalizeTags(tags: string[] | undefined) {
+  return [...new Set((tags ?? []).map(normalizeTag).filter(Boolean))];
+}
+
+function normalizeTag(tag: string) {
+  return tag.trim().toLowerCase();
 }
 
 function toRecipeSummary(recipe: RecipeRecord): RecipeSummary {
@@ -150,5 +180,6 @@ function toRecipeDetails(recipe: RecipeRecord): RecipeDetails {
       name: ingredient.name,
     })),
     method: recipe.steps.map((step) => step.instruction),
+    tags: recipe.tags.map((recipeTag) => recipeTag.tag.name),
   };
 }

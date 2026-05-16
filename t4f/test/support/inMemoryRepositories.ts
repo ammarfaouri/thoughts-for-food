@@ -18,9 +18,7 @@ export class InMemoryUserRepository implements UserRepository {
   private users: User[] = [];
 
   findByUsername(username: string) {
-    return Promise.resolve(
-      this.users.find((user) => user.username === username) ?? null,
-    );
+    return Promise.resolve(this.users.find((user) => user.username === username) ?? null);
   }
 
   findByEmail(email: string) {
@@ -67,12 +65,17 @@ export class InMemoryRecipeRepository implements RecipeRepository {
       const matchesPrepTime = criteria.maxPrepTime
         ? recipe.prepTime <= criteria.maxPrepTime
         : true;
-      const matchesAuthor = criteria.author
-        ? recipe.author === criteria.author
+      const matchesAuthor = criteria.author ? recipe.author === criteria.author : true;
+      const matchesTag = criteria.tag
+        ? recipe.tags.includes(criteria.tag.trim().toLowerCase())
         : true;
 
       return (
-        matchesSearch && matchesDifficulty && matchesPrepTime && matchesAuthor
+        matchesSearch &&
+        matchesDifficulty &&
+        matchesPrepTime &&
+        matchesAuthor &&
+        matchesTag
       );
     });
 
@@ -108,6 +111,7 @@ export class InMemoryRecipeRepository implements RecipeRepository {
       id: randomUUID(),
       author,
       ...draft,
+      tags: normalizeTags(draft.tags),
     };
     this.recipes.push(recipe);
     return Promise.resolve(recipe);
@@ -115,13 +119,23 @@ export class InMemoryRecipeRepository implements RecipeRepository {
 
   update(id: string, draft: RecipeDraft) {
     const index = this.recipes.findIndex((recipe) => recipe.id === id);
-    this.recipes[index] = { ...this.recipes[index], ...draft };
+    this.recipes[index] = {
+      ...this.recipes[index],
+      ...draft,
+      tags: normalizeTags(draft.tags),
+    };
     return Promise.resolve(this.recipes[index]);
   }
 
   async delete(id: string) {
     this.recipes = this.recipes.filter((recipe) => recipe.id !== id);
   }
+}
+
+function normalizeTags(tags: string[] | undefined) {
+  return [
+    ...new Set((tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean)),
+  ];
 }
 
 export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
@@ -161,9 +175,7 @@ export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
 
   async revoke(id: string, replacedByTokenId?: string) {
     this.refreshTokens = this.refreshTokens.map((token) =>
-      token.id === id
-        ? { ...token, revokedAt: new Date(), replacedByTokenId }
-        : token,
+      token.id === id ? { ...token, revokedAt: new Date(), replacedByTokenId } : token,
     );
   }
 

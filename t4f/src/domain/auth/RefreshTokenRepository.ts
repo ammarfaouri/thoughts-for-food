@@ -1,7 +1,4 @@
-import {
-  CreateRefreshTokenInput,
-  RefreshTokenRecord,
-} from "./RefreshToken";
+import { CreateRefreshTokenInput, RefreshTokenRecord } from "./RefreshToken";
 
 export interface RefreshTokenRepository {
   create(input: CreateRefreshTokenInput): Promise<RefreshTokenRecord>;

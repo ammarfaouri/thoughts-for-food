@@ -51,11 +51,7 @@ export function createRecipeRoutes(
       requireAuth,
       validateBody(recipeDraftSchema),
       asyncHandler(async (req, res) => {
-        await recipeService.update(
-          req.params.id,
-          req.user!.username,
-          req.body,
-        );
+        await recipeService.update(req.params.id, req.user!.username, req.body);
         res.sendStatus(200);
       }),
     )

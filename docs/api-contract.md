@@ -35,9 +35,15 @@ Most structured errors return:
 ```json
 {
   "code": "VALIDATION_ERROR",
-  "message": "Invalid request"
+  "message": "Invalid request",
+  "requestId": "0f4e7d58-9fd5-4e60-9e88-c68bbadfc67b"
 }
 ```
+
+Validation errors may also include a `details` array with field-level messages.
+Every response includes an `x-request-id` header. Clients may provide their own
+`x-request-id`; otherwise the API generates one. This makes logs, support
+reports, and failed requests easier to correlate.
 
 Some legacy status-only responses still exist. Those can be cleaned up once the
 frontend has a typed API client and better auth state handling.
@@ -71,6 +77,7 @@ search       case-insensitive match on name or description
 difficulty   exact 1-5 difficulty match
 maxPrepTime  recipes at or below this prep time in minutes
 author       exact author username
+tag          exact normalized tag match
 limit        page size, default 20, max 50
 offset       pagination offset, default 0
 ```
@@ -78,7 +85,7 @@ offset       pagination offset, default 0
 Example:
 
 ```txt
-GET /recipes?search=pizza&difficulty=3&maxPrepTime=60&limit=10&offset=0
+GET /recipes?search=pizza&difficulty=3&maxPrepTime=60&tag=italian&limit=10&offset=0
 ```
 
 ## Future v2 Contract

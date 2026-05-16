@@ -129,18 +129,26 @@ npm run test:db
 - Login rate limiting.
 - HTTP-only refresh token cookie defaults.
 - Hidden public profile email.
+- OpenAPI contract exposed at `/openapi.json`.
+- CI pipeline for backend and frontend checks.
+- Database-backed repository tests.
+- Search/filtering with tag support.
+- Request IDs are returned in `x-request-id`, included in error responses, and
+  attached to HTTP logs.
+- Environment configuration is validated at startup, with production checks for
+  required secrets.
+- Logs are structured with Pino and redact auth/cookie headers.
+- ESLint, Prettier, lint-staged, and Husky keep backend commits consistent.
 
 ## Remaining Backend Work
 
-- Update the frontend to use `/auth/*` token auth.
-- Add database-backed integration tests.
-- Add OpenAPI documentation.
-- Add CI pipeline.
-- Add search/filtering.
-- Add tags/favorites.
-- Add file/image upload flow.
-- Add observability-friendly request IDs.
-- Add deployment configuration.
+The backend foundation is now in a good stopping point. The remaining backend
+work is optional product/deployment work rather than modernization foundation:
+
+- Add favorites if the app needs a small user-specific product feature.
+- Add file/image upload flow if recipe photos become part of the core UX.
+- Add deployment configuration when choosing a real hosting target.
+- Remove legacy response shapes only after the frontend is ready for a v2 API.
 
 ## Senior-Level Framing
 

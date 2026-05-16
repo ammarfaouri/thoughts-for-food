@@ -7,12 +7,7 @@ export const openApiDocument = {
       "Recipe-sharing API using JWT access tokens and rotating HTTP-only refresh tokens. Recipe responses preserve legacy frontend fields such as `_id` while the backend uses PostgreSQL internally.",
   },
   servers: [{ url: "http://localhost:5000" }],
-  tags: [
-    { name: "System" },
-    { name: "Auth" },
-    { name: "Users" },
-    { name: "Recipes" },
-  ],
+  tags: [{ name: "System" }, { name: "Auth" }, { name: "Users" }, { name: "Recipes" }],
   paths: {
     "/health": {
       get: {
@@ -138,7 +133,8 @@ export const openApiDocument = {
         security: [{ bearerAuth: [] }],
         responses: {
           "200": {
-            description: "Current username as plain text for legacy frontend compatibility",
+            description:
+              "Current username as plain text for legacy frontend compatibility",
             content: {
               "text/plain": {
                 schema: { type: "string", example: "ammar" },
@@ -307,6 +303,12 @@ export const openApiDocument = {
             schema: { type: "string", minLength: 1, maxLength: 32 },
           },
           {
+            name: "tag",
+            in: "query",
+            schema: { type: "string", minLength: 1, maxLength: 32 },
+            description: "Exact normalized recipe tag match",
+          },
+          {
             name: "limit",
             in: "query",
             schema: { type: "integer", minimum: 1, maximum: 50, default: 20 },
@@ -346,7 +348,8 @@ export const openApiDocument = {
         },
         responses: {
           "201": {
-            description: "Created recipe ID as plain text for legacy frontend compatibility",
+            description:
+              "Created recipe ID as plain text for legacy frontend compatibility",
             content: {
               "text/plain": {
                 schema: { type: "string", format: "uuid" },
@@ -512,6 +515,12 @@ export const openApiDocument = {
             items: { type: "string" },
             example: ["Mix dough", "Bake until crisp"],
           },
+          tags: {
+            type: "array",
+            maxItems: 10,
+            items: { type: "string", minLength: 1, maxLength: 32 },
+            example: ["dinner", "italian"],
+          },
         },
       },
       Recipe: {
@@ -593,10 +602,27 @@ export const openApiDocument = {
       },
       ErrorResponse: {
         type: "object",
-        required: ["code", "message"],
+        required: ["code", "message", "requestId"],
         properties: {
           code: { type: "string", example: "VALIDATION_ERROR" },
           message: { type: "string", example: "Invalid request" },
+          requestId: {
+            type: "string",
+            example: "0f4e7d58-9fd5-4e60-9e88-c68bbadfc67b",
+          },
+          details: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                path: { type: "string", example: "difficulty" },
+                message: {
+                  type: "string",
+                  example: "Number must be less than or equal to 5",
+                },
+              },
+            },
+          },
         },
       },
     },

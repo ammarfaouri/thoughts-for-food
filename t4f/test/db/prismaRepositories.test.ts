@@ -4,11 +4,7 @@ import { RecipeDraft } from "../../src/domain/recipe/Recipe";
 import { PrismaRecipeRepository } from "../../src/infrastructure/repositories/PrismaRecipeRepository";
 import { PrismaRefreshTokenRepository } from "../../src/infrastructure/repositories/PrismaRefreshTokenRepository";
 import { PrismaUserRepository } from "../../src/infrastructure/repositories/PrismaUserRepository";
-import {
-  disconnectDatabase,
-  prismaTestClient,
-  resetDatabase,
-} from "./prismaTestClient";
+import { disconnectDatabase, prismaTestClient, resetDatabase } from "./prismaTestClient";
 
 const users = new PrismaUserRepository(prismaTestClient);
 const recipes = new PrismaRecipeRepository(prismaTestClient);
@@ -32,6 +28,7 @@ const pizzaDraft: RecipeDraft = {
     { amount: 300, unit: "ml", name: "Water" },
   ],
   method: ["Mix dough", "Proof dough", "Bake pizza"],
+  tags: ["Dinner", "Italian", "italian"],
 };
 
 const stewDraft: RecipeDraft = {
@@ -41,6 +38,7 @@ const stewDraft: RecipeDraft = {
   difficulty: 5,
   ingredients: [{ amount: 2, unit: "cups", name: "Stock" }],
   method: ["Simmer slowly"],
+  tags: ["Dinner", "Comfort"],
 };
 
 describe("Prisma repositories", () => {
@@ -90,12 +88,13 @@ describe("Prisma repositories", () => {
       difficulty: 3,
       ingredients: pizzaDraft.ingredients,
       method: pizzaDraft.method,
+      tags: ["dinner", "italian"],
     });
 
     await expect(recipes.findById(created.id)).resolves.toMatchObject(created);
   });
 
-  it("replaces ingredients and steps on recipe update", async () => {
+  it("replaces ingredients, steps, and tags on recipe update", async () => {
     const author = await users.create(userInput);
     const created = await recipes.create(author.id, pizzaDraft);
 
@@ -104,13 +103,13 @@ describe("Prisma repositories", () => {
       name: "Updated Pizza",
       ingredients: [{ amount: 200, unit: "g", name: "Cheese" }],
       method: ["Add cheese", "Bake again"],
+      tags: ["Vegetarian"],
     });
 
     expect(updated.name).toBe("Updated Pizza");
-    expect(updated.ingredients).toEqual([
-      { amount: 200, unit: "g", name: "Cheese" },
-    ]);
+    expect(updated.ingredients).toEqual([{ amount: 200, unit: "g", name: "Cheese" }]);
     expect(updated.method).toEqual(["Add cheese", "Bake again"]);
+    expect(updated.tags).toEqual(["vegetarian"]);
 
     const ingredientRows = await prismaTestClient.recipeIngredient.findMany({
       where: { recipeId: created.id },
@@ -118,18 +117,20 @@ describe("Prisma repositories", () => {
     const stepRows = await prismaTestClient.recipeStep.findMany({
       where: { recipeId: created.id },
     });
+    const tagRows = await prismaTestClient.recipeTag.findMany({
+      where: { recipeId: created.id },
+    });
 
     expect(ingredientRows).toHaveLength(1);
     expect(stepRows).toHaveLength(2);
+    expect(tagRows).toHaveLength(1);
   });
 
   it("returns recipe summaries by author username", async () => {
     const author = await users.create(userInput);
     const created = await recipes.create(author.id, pizzaDraft);
 
-    await expect(
-      recipes.findSummariesByAuthorUsername("ammar"),
-    ).resolves.toEqual([
+    await expect(recipes.findSummariesByAuthorUsername("ammar")).resolves.toEqual([
       {
         id: created.id,
         name: "Pizza",
@@ -139,7 +140,7 @@ describe("Prisma repositories", () => {
     ]);
   });
 
-  it("filters recipes by search, difficulty, prep time, author, and pagination", async () => {
+  it("filters recipes by search, difficulty, prep time, author, tag, and pagination", async () => {
     const ammar = await users.create(userInput);
     const sara = await users.create({
       ...userInput,
@@ -155,6 +156,7 @@ describe("Prisma repositories", () => {
       description: "Fast fresh lunch",
       prepTime: 15,
       difficulty: 1,
+      tags: ["Lunch", "Fresh"],
     });
 
     await expect(
@@ -163,6 +165,7 @@ describe("Prisma repositories", () => {
         difficulty: 3,
         maxPrepTime: 60,
         author: "ammar",
+        tag: "italian",
         limit: 20,
         offset: 0,
       }),
@@ -190,6 +193,11 @@ describe("Prisma repositories", () => {
     ).resolves.toBe(0);
     await expect(
       prismaTestClient.recipeStep.count({
+        where: { recipeId: created.id },
+      }),
+    ).resolves.toBe(0);
+    await expect(
+      prismaTestClient.recipeTag.count({
         where: { recipeId: created.id },
       }),
     ).resolves.toBe(0);

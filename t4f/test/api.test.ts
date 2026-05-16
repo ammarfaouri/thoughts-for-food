@@ -44,6 +44,7 @@ const recipePayload = {
   difficulty: 3,
   ingredients: [{ amount: 500, unit: "g", name: "Flour" }],
   method: ["Mix dough", "Bake pizza"],
+  tags: ["Dinner", "Italian", "italian"],
 };
 
 async function register(agent: request.SuperAgentTest, payload = userPayload) {
@@ -55,10 +56,12 @@ describe("API", () => {
   it("exposes health and readiness routes", async () => {
     const app = createTestApp();
 
-    await request(app).get("/health").expect(200, {
+    const response = await request(app).get("/health").expect(200, {
       status: "ok",
       service: "thoughts-for-food-api",
     });
+
+    expect(response.headers["x-request-id"]).toBeTruthy();
   });
 
   it("exposes the OpenAPI contract", async () => {
@@ -70,12 +73,17 @@ describe("API", () => {
   });
 
   it("returns a structured 404 for unknown routes", async () => {
-    const response = await request(createTestApp()).get("/missing").expect(404);
+    const response = await request(createTestApp())
+      .get("/missing")
+      .set("x-request-id", "test-request-id")
+      .expect(404);
 
     expect(response.body).toMatchObject({
       code: "NOT_FOUND",
       message: "Route GET /missing was not found",
+      requestId: "test-request-id",
     });
+    expect(response.headers["x-request-id"]).toBe("test-request-id");
   });
 
   it("registers a user, returns an access token, and hides profile email", async () => {
@@ -126,6 +134,7 @@ describe("API", () => {
       description: "Simple pizza",
       prepTime: 45,
       difficulty: 3,
+      tags: ["dinner", "italian"],
     });
   });
 
@@ -147,26 +156,34 @@ describe("API", () => {
         description: "Long cooked dinner",
         prepTime: 120,
         difficulty: 5,
+        tags: ["Dinner", "Comfort"],
       })
       .expect(201);
 
     const response = await agent
       .get("/recipes")
-      .query({ search: "pizza", difficulty: 3, maxPrepTime: 60 })
+      .query({ search: "pizza", difficulty: 3, maxPrepTime: 60, tag: "Italian" })
       .expect(200);
 
     expect(response.body).toHaveLength(1);
     expect(response.body[0]).toMatchObject({
       name: "Pizza",
       author: "ammar",
+      tags: ["dinner", "italian"],
     });
   });
 
   it("rejects invalid recipe list query params", async () => {
-    await request(createTestApp())
+    const response = await request(createTestApp())
       .get("/recipes")
       .query({ difficulty: 10 })
       .expect(400);
+
+    expect(response.body).toMatchObject({
+      code: "VALIDATION_ERROR",
+      requestId: expect.any(String),
+      details: expect.arrayContaining([expect.objectContaining({ path: "difficulty" })]),
+    });
   });
 
   it("rejects recipe updates from non-owners", async () => {
@@ -182,10 +199,10 @@ describe("API", () => {
       .expect(201);
 
     const otherAccessToken = await register(otherUser, {
-        ...userPayload,
-        username: "sara",
-        email: "sara@example.com",
-      });
+      ...userPayload,
+      username: "sara",
+      email: "sara@example.com",
+    });
 
     await otherUser
       .put(`/recipes/${created.text}`)
@@ -207,10 +224,7 @@ describe("API", () => {
     const refreshResponse = await agent.post("/auth/refresh").expect(200);
     expect(refreshResponse.body.accessToken).toBeTruthy();
 
-    await request(app)
-      .post("/auth/refresh")
-      .set("Cookie", originalCookie)
-      .expect(401);
+    await request(app).post("/auth/refresh").set("Cookie", originalCookie).expect(401);
   });
 
   it("revokes refresh tokens on logout", async () => {

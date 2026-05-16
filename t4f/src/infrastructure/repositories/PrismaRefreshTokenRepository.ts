@@ -24,9 +24,7 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
     return toRefreshTokenRecord(token);
   }
 
-  async findByTokenHash(
-    tokenHash: string,
-  ): Promise<RefreshTokenRecord | null> {
+  async findByTokenHash(tokenHash: string): Promise<RefreshTokenRecord | null> {
     const token = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
       include: refreshTokenInclude,

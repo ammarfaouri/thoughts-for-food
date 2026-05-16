@@ -40,6 +40,7 @@ class InMemoryRecipeRepository implements RecipeRepository {
       id: crypto.randomUUID(),
       author: authorId,
       ...draft,
+      tags: draft.tags ?? [],
     };
     this.recipes.push(recipe);
     return Promise.resolve(recipe);
@@ -47,7 +48,11 @@ class InMemoryRecipeRepository implements RecipeRepository {
 
   update(id: string, draft: RecipeDraft) {
     const index = this.recipes.findIndex((recipe) => recipe.id === id);
-    this.recipes[index] = { ...this.recipes[index], ...draft };
+    this.recipes[index] = {
+      ...this.recipes[index],
+      ...draft,
+      tags: draft.tags ?? [],
+    };
     return Promise.resolve(this.recipes[index]);
   }
 
@@ -63,6 +68,7 @@ const draft: RecipeDraft = {
   difficulty: 3,
   ingredients: [{ amount: 500, unit: "g", name: "Flour" }],
   method: ["Mix dough"],
+  tags: ["dinner"],
 };
 
 describe("RecipeService", () => {
@@ -75,6 +81,7 @@ describe("RecipeService", () => {
       difficulty: 3,
       maxPrepTime: 45,
       author: "ammar",
+      tag: "dinner",
       limit: 10,
       offset: 5,
     });
@@ -84,6 +91,7 @@ describe("RecipeService", () => {
       difficulty: 3,
       maxPrepTime: 45,
       author: "ammar",
+      tag: "dinner",
       limit: 10,
       offset: 5,
     });
@@ -107,8 +115,8 @@ describe("RecipeService", () => {
     repository.recipes.push({ id: "recipe-1", author: "ammar", ...draft });
     const service = new RecipeService(repository);
 
-    await expect(
-      service.update("recipe-1", "other-user", draft),
-    ).rejects.toMatchObject({ statusCode: 401 });
+    await expect(service.update("recipe-1", "other-user", draft)).rejects.toMatchObject({
+      statusCode: 401,
+    });
   });
 });

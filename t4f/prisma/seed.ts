@@ -1,5 +1,5 @@
-import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -33,6 +33,7 @@ async function main() {
         { amount: 1, unit: "tsp", name: "Paprika" },
       ],
       method: ["Cut chicken", "Coat pieces", "Bake or fry until golden"],
+      tags: ["dinner", "quick", "comfort"],
     },
     {
       name: "Pizza",
@@ -46,6 +47,7 @@ async function main() {
         { amount: 200, unit: "g", name: "Tomato sauce" },
       ],
       method: ["Make dough", "Add sauce and toppings", "Bake until crisp"],
+      tags: ["dinner", "italian"],
     },
   ];
 
@@ -67,6 +69,16 @@ async function main() {
           create: recipe.method.map((instruction, index) => ({
             instruction,
             position: index + 1,
+          })),
+        },
+        tags: {
+          create: recipe.tags.map((name) => ({
+            tag: {
+              connectOrCreate: {
+                where: { name },
+                create: { name },
+              },
+            },
           })),
         },
       },

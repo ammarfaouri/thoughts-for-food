@@ -3,9 +3,7 @@ import { UserProfileService } from "../../../application/users/UserProfileServic
 import { asyncHandler } from "../asyncHandler";
 import { serializeUserProfile } from "../serializers";
 
-export function createUserRoutes(
-  userProfileService: UserProfileService,
-) {
+export function createUserRoutes(userProfileService: UserProfileService) {
   const router = Router();
 
   router.get(

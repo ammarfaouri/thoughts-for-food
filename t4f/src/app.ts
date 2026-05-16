@@ -7,12 +7,14 @@ import { TokenService } from "./application/auth/TokenService";
 import { RecipeService } from "./application/recipes/RecipeService";
 import { UserProfileService } from "./application/users/UserProfileService";
 import { env } from "./config/env";
+import { logger } from "./infrastructure/logger";
 import { PrismaRefreshTokenRepository } from "./infrastructure/repositories/PrismaRefreshTokenRepository";
 import { PrismaRecipeRepository } from "./infrastructure/repositories/PrismaRecipeRepository";
 import { PrismaUserRepository } from "./infrastructure/repositories/PrismaUserRepository";
 import { prisma } from "./infrastructure/prisma/client";
 import { errorHandler } from "./interfaces/http/middleware/errorHandler";
 import { notFound } from "./interfaces/http/middleware/notFound";
+import { requestContext } from "./interfaces/http/middleware/requestContext";
 import { createAuthRoutes } from "./interfaces/http/routes/authRoutes";
 import { createRecipeRoutes } from "./interfaces/http/routes/recipeRoutes";
 import { createSystemRoutes } from "./interfaces/http/routes/systemRoutes";
@@ -35,13 +37,22 @@ export function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const services = options.services ?? createDefaultServices();
 
+  app.use(requestContext);
   app.use(helmet());
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(cookieParser());
 
   if (options.enableLogger ?? env.NODE_ENV !== "test") {
-    app.use(pinoHttp());
+    app.use(
+      pinoHttp({
+        logger,
+        genReqId: (req) => req.requestId,
+        customProps: (req) => ({
+          requestId: req.requestId,
+        }),
+      }),
+    );
   }
 
   app.use(createSystemRoutes(prisma));

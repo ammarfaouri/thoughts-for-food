@@ -9,7 +9,15 @@ export function validateBody(schema: AnyZodObject) {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        throw new AppError(400, error.errors[0]?.message ?? "Invalid request", "VALIDATION_ERROR");
+        throw new AppError(
+          400,
+          error.errors[0]?.message ?? "Invalid request",
+          "VALIDATION_ERROR",
+          error.errors.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        );
       }
       next(error);
     }
