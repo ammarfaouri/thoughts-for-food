@@ -10,7 +10,7 @@ export const signUpSchema = z.object({
   lastName: z.string().trim().min(1, "Last Name required"),
   username: z.string().trim().min(1, "Username required"),
   email: z.string().trim().email("Enter a valid email address"),
-  password: z.string().min(1, "Password required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;

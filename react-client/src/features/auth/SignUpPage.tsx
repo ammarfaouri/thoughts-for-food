@@ -61,6 +61,11 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
           Server cannot handle your request at the moment
         </Alert>
       )}
+      {responseStatus === 400 && (
+        <Alert variant="danger">
+          Please check the account details and try again
+        </Alert>
+      )}
 
       <h2>Create your account!</h2>
       <Form
@@ -81,7 +86,7 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-                {errors.firstName?.message}
+            {errors.firstName?.message}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="lastName">
@@ -96,7 +101,7 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-                {errors.lastName?.message}
+            {errors.lastName?.message}
           </Form.Control.Feedback>
         </Form.Group>
         <Form.Group controlId="username">
@@ -124,7 +129,7 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-                {errors.email?.message}
+            {errors.email?.message}
           </Form.Control.Feedback>
         </Form.Group>
 
@@ -140,7 +145,7 @@ function SignUpPage({ history, loggedIn, login: setLoginState }: SignUpPageProps
             Looks good!
           </Form.Control.Feedback>
           <Form.Control.Feedback type="invalid">
-                {errors.password?.message}
+            {errors.password?.message}
           </Form.Control.Feedback>
         </Form.Group>
 

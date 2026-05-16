@@ -115,7 +115,46 @@ More reasoning:
 - [API Contract Notes](docs/api-contract.md)
 - [Backend Portfolio Notes](docs/backend-portfolio-notes.md)
 
-## Running The Backend
+## Running The App
+
+From the repository root:
+
+```bash
+npm run dev
+```
+
+That command:
+
+- creates `t4f/.env` from `.env.example` if needed
+- installs backend/frontend dependencies if `node_modules` is missing
+- starts PostgreSQL with Docker Compose
+- waits for PostgreSQL readiness
+- applies Prisma migrations
+- starts the backend API and frontend dev server together
+
+The app runs at:
+
+```txt
+Frontend: http://localhost:3000
+Backend:  http://localhost:5000
+```
+
+If Docker Desktop is not running, start Docker Desktop first and run the command
+again.
+
+For setup without starting the long-running servers:
+
+```bash
+npm run setup
+```
+
+To intentionally refresh the demo data:
+
+```bash
+npm run seed
+```
+
+## Running The Backend Manually
 
 From the backend directory:
 
@@ -151,7 +190,7 @@ cd t4f
 docker build -t thoughts-for-food-api .
 ```
 
-## Running The Frontend
+## Running The Frontend Manually
 
 From the frontend directory:
 

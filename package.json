@@ -1,0 +1,14 @@
+{
+  "name": "thoughts-for-food",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Full-stack recipe-sharing app with a TypeScript Express API and Vite React frontend",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:backend": "npm --prefix t4f run dev",
+    "dev:frontend": "npm --prefix react-client start",
+    "setup": "node scripts/dev.mjs --setup-only",
+    "seed": "npm --prefix t4f run prisma:seed",
+    "check": "npm --prefix t4f run format:check && npm --prefix t4f run lint && npm --prefix t4f run typecheck && npm --prefix react-client run typecheck && npm --prefix react-client test && npm --prefix react-client run build"
+  }
+}
